@@ -2,6 +2,7 @@
 
 import sys
 from time import sleep
+from random import randrange
 
 # Todo when board sets a block, draw. and other places that need draw too
 # todo get python to clear screen during render.
@@ -194,12 +195,27 @@ class Board:
         if self._current_block:
             # if ever I wanted a new block without cleaning up first
             return
-        if block is None:
-            # todo get new random block
-            pass
+            
+        if block is None: 
+            r = randrange(0, 7)
+            if r == 0:
+                self._current_block = Block('l')
+            elif r == 1:
+                self._current_block = Block('j')
+            elif r == 2:
+                self._current_block = Block('i')
+            elif r == 3:
+                self._current_block = Block('o')
+            elif r == 4:
+                self._current_block = Block('s')
+            elif r == 5:
+                self._current_block = Block('z')
+            elif r == 6:
+                self._current_block = Block('t')
         else:
             self._current_block = block
-            self._draw(block.char)
+
+        self._draw(block.char)
 
     def _draw(self, char):
         for x, y in self._current_block.board_coords():
