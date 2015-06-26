@@ -3,12 +3,13 @@
 import sys
 from time import sleep
 from random import randrange
+from subprocess import call
 
-# Todo when board sets a block, draw. and other places that need draw too
 # todo get python to clear screen during render.
 # todo make these two classes as modular as possible
 # todo get sleep timer
 # todo process_input gets command line inputs
+# rotation refinement = http://gamedev.stackexchange.com/questions/17974/how-to-rotate-blocks-in-tetris
 
 """
    Movement and placement of the block on the board will depend on the
@@ -22,7 +23,7 @@ class Block:
 
     def __init__(self, block_type):
         self.char = block_type
-        self.board_location = [5, 2]
+        self.board_location = [5, 0]
         if block_type == 'l':
             self.unit_coords = [[0,0], [1,0], [0,1], [0,2]]
         elif block_type == 'j':
@@ -61,99 +62,77 @@ class Block:
         print("Rotated coordinates: {0} -> {1}".format(rotated_unit_coords, self.unit_coords))
         self.unit_coords = rotated_unit_coords
 
-    def can_move(self, direction, board):
-        board_coords = self.board_coords()
-        for coord in board_coords:
-            x, y = coord
-            if direction == 'left':
-                moved_coord = [x - 1, y]
-            elif direction == 'right':
-                moved_coord = [x + 1, y]
-            elif direction == 'down':
-                moved_coord = [x, y + 1]
-            else:
-                return False
-
-            if moved_coord in board_coords:
-                continue
-            if (direction == 'down') and moved_coord[1] > 21:
-                return False
-            if ((direction == 'right' or direction == 'left') and
-                    (moved_coord[0] > 9 or moved_coord[0] < 0)):
-                return False
-            if board.matrix[moved_coord[0]][moved_coord[1]] != ' ':
-                return False
-        return True
-
-
-
 class Board:
     height = 22
     width = 10
-    matrix = None
-    _current_block = None
+    matrix = None    
     line_ys = []  # Holds the y-coords of cleared lines for a block drop
-    clear_char = ' '
+    _clear_char = ' '
+    current_block = None
 
     def __init__(self):
         self.matrix = [[' ' for y in range(self.height)] for x in range(self.width)]
 
     def __str__(self):
-        s = ' 0 1 2 3 4 5 6 7 8 9\n'
+        s = '  0 1 2 3 4 5 6 7 8 9\n'
         for y in range(self.height):
-            s += '|'
+            if y < 10:
+                s += ' {}|'.format(y)
+            else:
+                s += '{}|'.format(y)
             for x in range(self.width):
                 s += ' ' + self.matrix[x][y]
             s += '|\n'
-        s += ' - - - - - - - - - -\n'
+        s += '  - - - - - - - - - -\n'
         return s
 
     def move_block_down(self):
-        if not self._current_block:
+        if not self.current_block:
             return False
-        if self._current_block.can_move('down', self):
+        if self.can_move_block('down'):
             self._draw(' ')
-            self._current_block.board_location[1] += 1
-            self._draw(self._current_block.char)
+            self.current_block.board_location[1] += 1
+            self._draw(self.current_block.char)
             return True
         else:
             return False
 
     def move_block_right(self):
-        if not self._current_block:
+        if not self.current_block:
             return False
-        if self._current_block.can_move('right', self):
+        if self.can_move_block('right'):
             self._draw(' ')
-            self._current_block.board_location[0] += 1
-            self._draw(self._current_block.char)
+            self.current_block.board_location[0] += 1
+            self._draw(self.current_block.char)
             return True
         else:
             return False
 
     def move_block_left(self):
-        if not self._current_block:
+        if not self.current_block:
             return False
-        if self._current_block.can_move('left', self):
+        if self.can_move_block('left'):
             self._draw(' ')
-            self._current_block.board_location[0] -= 1
-            self._draw(self._current_block.char)
+            self.current_block.board_location[0] -= 1
+            self._draw(self.current_block.char)
             return True
         else:
             return False
 
     def rotate_block(self, direction):
         self._draw(self.clear_char)
-        self._current_block.rotate(direction)
-        self._draw(self._current_block.char)
+        self.current_block.rotate(direction)
+        self._draw(self.current_block.char)
 
+    # Note: this method should erase the current_block variable
     def drop_block(self):
-        if not self._current_block.can_move('down', self):
-            self._current_block = None
+        if not self.can_move_block('down'):
+            self.current_block = None
             return False
         else:
-            while self._current_block.can_move('down', self):
+            while self.can_move_block('down'):
                 self.move_block_down()
-            self._current_block = None
+            self.current_block = None
             return True
 
     # todo untested
@@ -177,8 +156,28 @@ class Board:
                 continue
         return len(self.line_ys)
 
-    def can_block_move(self, direction):
-        return self._current_block.can_move(self, direction)
+    def can_move_block(self, direction):
+        board_coords = self.current_block.board_coords()
+        for coord in board_coords:
+            x, y = coord
+            if direction == 'left':
+                moved_coord = [x - 1, y]
+            elif direction == 'right':
+                moved_coord = [x + 1, y]
+            elif direction == 'down':
+                moved_coord = [x, y + 1]
+            else:
+                return False
+            if moved_coord in board_coords:
+                continue
+            if (direction == 'down') and moved_coord[1] > 21:
+                return False
+            if ((direction == 'right' or direction == 'left') and
+                    (moved_coord[0] > 9 or moved_coord[0] < 0)):
+                return False
+            if self.matrix[moved_coord[0]][moved_coord[1]] != ' ':
+                return False
+        return True
 
     # called only after clear_lines
     def collapse_board(self):
@@ -191,35 +190,38 @@ class Board:
                     self.matrix[x][y+1] = self.matrix[x][y]
         return True
 
-    def new_block(self, block=None):
-        if self._current_block:
-            # if ever I wanted a new block without cleaning up first
-            return
-            
-        if block is None: 
+    # none supplied, current block => nothing happens
+    # none supplied, no current => get random
+    # supplied, current => nothing happens
+    # supplied, no current => use supplied
+    def new_block(self, blockchar=None):
+        if self.current_block:
+            raise ShouldntHappenError("Getting a new block without removing current")
+            sys.exit()
+        if blockchar is None:             
             r = randrange(0, 7)
             if r == 0:
-                self._current_block = Block('l')
+                self.current_block = Block('l')
             elif r == 1:
-                self._current_block = Block('j')
+                self.current_block = Block('j')
             elif r == 2:
-                self._current_block = Block('i')
+                self.current_block = Block('i')
             elif r == 3:
-                self._current_block = Block('o')
+                self.current_block = Block('o')
             elif r == 4:
-                self._current_block = Block('s')
+                self.current_block = Block('s')
             elif r == 5:
-                self._current_block = Block('z')
+                self.current_block = Block('z')
             elif r == 6:
-                self._current_block = Block('t')
+                self.current_block = Block('t')
         else:
-            self._current_block = block
-
-        self._draw(block.char)
+            self.current_block = Block(blockchar)
+        self._draw(self.current_block.char)
 
     def _draw(self, char):
-        for x, y in self._current_block.board_coords():
-            self.matrix[x][y] = char
+        for x, y in self.current_block.board_coords():
+            if x >= 0 and y >= 0:
+                self.matrix[x][y] = char
 
     def _line_is_complete(self, y):
         for x in range(self.width):
@@ -231,6 +233,9 @@ class Board:
                 else:
                     continue
 
+class ShouldntHappenError(UserWarning):
+    pass
+
 
 ################################################################################
 
@@ -238,30 +243,35 @@ class Board:
 def process_input(board):
     # todo
     pass
-def update(board):
-    # todo
-    # if input, update
-    # if no input and if time is at one second interval, move block down
-    pass
-def render(board):
-    # todo
-    # print matrix, or render own graphical stuff
-    pass
 
-def game_loop():
+def update(board):
+    # todo if input, update
+    # if no input and if time is at one second interval, move block down
+    if board.current_block is None:
+        board.new_block()
+    if board.can_move_block('down'):
+        board.move_block_down()
+    else:
+        board.drop_block()  # dropping erases block
+
+def render(board):
+    call(["clear"])
+    print(board)    
+
+def game_loop(time=1):
     board = Board()
+    board.new_block('l')
     while True:
         process_input(board)
         update(board)
         render(board)
-        sleep(1)
+        sleep(time)        
 
 def run():
-    if len(sys.argv) == 2:
-        if sys.argv[1] == '-t':
-            test2()
-    elif len(sys.argv) == 1:
+    if len(sys.argv) == 1:
         game_loop()
+    elif len(sys.argv) == 2:
+        game_loop(float(sys.argv[1]))
 
 if __name__ == '__main__':
     run()

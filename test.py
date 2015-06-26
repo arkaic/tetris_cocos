@@ -1,19 +1,17 @@
 # __author__ = 'henry'
-from tetris import Board, Block
+from tetris import *
 
 board = Board()
-
-board.new_block(Block('t'))
+board.new_block('l')
 board.drop_block()
 print(board)
 
-board.new_block(Block('z'))
-board.drop_block()
+board.new_block('z')
 print(board)
-
-board.new_block(Block('l'))
-print(board)
-board.rotate_block('counterclockwise')
-print(board)
-board.drop_block()
-print(board)
+while board.new_block:    
+    process_input(board)
+    print(board)
+    update(board)
+    print(board)
+    render(board)
+    sleep(.3)    
