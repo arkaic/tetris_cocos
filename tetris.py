@@ -11,10 +11,9 @@ from subprocess import call
 # todo process_input gets command line inputs
 # rotation refinement = http://gamedev.stackexchange.com/questions/17974/how-to-rotate-blocks-in-tetris
 
-"""
-   Movement and placement of the block on the board will depend on the
-   block's board_location.
-"""
+
+# Movement and placement of the block on the board will depend on the
+# block's board_location.
 
 class Block:
     char = ""             # l j i o s z t
@@ -32,9 +31,9 @@ class Block:
             self.unit_coords = [[0,0], [0,1], [0,-1], [0,-2]]
         elif block_type == 'o':
             self.unit_coords = [[0,0], [0,1], [1,0], [1,1]]
-        elif block_type == 's':
-            self.unit_coords = [[0,0], [0,-1], [-1,-1], [1,0]]
         elif block_type == 'z':
+            self.unit_coords = [[0,0], [0,-1], [-1,-1], [1,0]]
+        elif block_type == 's':
             self.unit_coords = [[0,0], [-1,0], [0,-1], [1,-1]]
         elif block_type == 't':
             self.unit_coords = [[0,0], [-1,0], [1,0], [0,1]]
@@ -71,7 +70,7 @@ class Board:
     current_block = None
 
     def __init__(self):
-        self.matrix = [[' ' for y in range(self.height)] for x in range(self.width)]
+        self.matrix = [[self._clear_char for y in range(self.height)] for x in range(self.width)]
 
     def __str__(self):
         s = '  0 1 2 3 4 5 6 7 8 9\n'
@@ -90,7 +89,7 @@ class Board:
         if not self.current_block:
             return False
         if self.can_move_block('down'):
-            self._draw(' ')
+            self._draw(self._clear_char)
             self.current_block.board_location[1] += 1
             self._draw(self.current_block.char)
             return True
@@ -101,7 +100,7 @@ class Board:
         if not self.current_block:
             return False
         if self.can_move_block('right'):
-            self._draw(' ')
+            self._draw(self._clear_char)
             self.current_block.board_location[0] += 1
             self._draw(self.current_block.char)
             return True
@@ -112,7 +111,7 @@ class Board:
         if not self.current_block:
             return False
         if self.can_move_block('left'):
-            self._draw(' ')
+            self._draw(self._clear_char)
             self.current_block.board_location[0] -= 1
             self._draw(self.current_block.char)
             return True
@@ -120,7 +119,7 @@ class Board:
             return False
 
     def rotate_block(self, direction):
-        self._draw(self.clear_char)
+        self._draw(self._clear_char)
         self.current_block.rotate(direction)
         self._draw(self.current_block.char)
 
@@ -150,7 +149,7 @@ class Board:
         for y in range(2, self.height):
             if self._line_is_complete(y):
                 for x in range(self.width):
-                    self.matrix[x][y] = ' '
+                    self.matrix[x][y] = self._clear_char
                 self.line_ys.append(y)
             else:
                 continue
@@ -175,7 +174,7 @@ class Board:
             if ((direction == 'right' or direction == 'left') and
                     (moved_coord[0] > 9 or moved_coord[0] < 0)):
                 return False
-            if self.matrix[moved_coord[0]][moved_coord[1]] != ' ':
+            if self.matrix[moved_coord[0]][moved_coord[1]] != self._clear_char:
                 return False
         return True
 
@@ -225,7 +224,7 @@ class Board:
 
     def _line_is_complete(self, y):
         for x in range(self.width):
-            if self.matrix[x][y] == ' ':
+            if self.matrix[x][y] == self._clear_char:
                 return False
             else:
                 if x == self.width - 1:
@@ -274,4 +273,5 @@ def run():
         game_loop(float(sys.argv[1]))
 
 if __name__ == '__main__':
+    print("tetris.py is main")
     run()
