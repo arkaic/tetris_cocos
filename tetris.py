@@ -1,6 +1,6 @@
 # __author__ = 'henry'
 
-import sys
+import sys, os
 from time import sleep
 from random import randrange
 from subprocess import call
@@ -87,13 +87,17 @@ class Board:
 
     def move_block_down(self):
         if not self.current_block:
+            print('not moving down')
             return False
         if self.can_move_block('down'):
             self._draw(self._clear_char)
+            print("start{}".format(self.current_block.board_location))
             self.current_block.board_location[1] += 1
+            print("end{}".format(self.current_block.board_location))        
             self._draw(self.current_block.char)
             return True
         else:
+            print('notmoving down')
             return False
 
     def move_block_right(self):
@@ -125,6 +129,7 @@ class Board:
 
     # Note: this method should erase the current_block variable
     def drop_block(self):
+        print('dropping')
         if not self.can_move_block('down'):
             self.current_block = None
             return False
