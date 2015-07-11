@@ -1,10 +1,11 @@
-# __author__ = 'henry'
 from __future__ import division, print_function, unicode_literals
 import tetris, cocos, sys, os, pyglet
+from cocos import tiles, layer
 from cocos.director import director
 from cocos.text import Label
 from cocos.actions import *
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+
 
 class ProtoTetrisLayer(cocos.layer.ColorLayer):
     is_event_handler = True
@@ -54,9 +55,34 @@ class ProtoTetrisLayer(cocos.layer.ColorLayer):
         x,y = sprite.position
         print("({},{})".format(x, y))
 
+# class ProtoBoardLayer(cocos.layer.RectMapLayer):
+#     def __init__(self, board):
+#         super(ProtoBoardLayer, self).__init__()
+#         pass
+
 if __name__ == "__main__":
-    director.init()
+    director.init(resizable=True)
     director.show_FPS = True
+    map = tiles.load('tetris.xml')['map0']
+
+    sprite_layer = layer.ScrollableLayer()
+    sprite = cocos.sprite.Sprite('grossini.png')
+
+    imgs = [pyglet.resource.image('sprites/cellblue.png'),
+            pyglet.resource.image('sprites/cellgreen.png'),
+            pyglet.resource.image('sprites/cellred.png')]
+    anim = pyglet.image.Animation.from_image_sequence(imgs, 0.5, True)
+    anim_sprite = cocos.sprite.Sprite(anim)
+
+    sprite_layer.add(sprite) 
+    sprite_layer.add(anim_sprite)
+
+    scroller = layer.ScrollingManager()
+    scroller.add(map)
+    scroller.add(sprite_layer)
+    mainscene = cocos.scene.Scene(scroller)
+    mainscene2 = cocos.scene.Scene(ProtoTetrisLayer())
     # make a layer, make a scene with this layer, then have directory run it
     # if the layer is an event handler, it's probably pushed into the emitter of mouse/key events
-    director.run(cocos.scene.Scene(ProtoTetrisLayer()))
+    # director.run(cocos.scene.Scene(ProtoTetrisLayer()))
+    director.run(mainscene)
