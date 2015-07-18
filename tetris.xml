@@ -1,0 +1,284 @@
+<?xml version="1.0"?>
+<resource>
+  <imageatlas file="spritesheet.png" id="atlas" size="18x18">   
+    <image offset="7,217" id="i-o_red"></image>
+    <image offset="34,217" id="i-o_orange"></image>
+    <image offset="61,217" id="i-o_yellow"></image>
+    <image offset="88,217" id="i-o_lightgreen"></image>
+    <image offset="115,217" id="i-o_green"></image>
+    <image offset="142,217" id="i-o_lightblue"></image>
+    <image offset="169,217" id="i-o_blue"></image>
+    <image offset="196,217" id="i-o_purple"></image>
+    <image offset="223,217" id="i-o_pink"></image>
+    <image offset="250,217" id="i-o_deeppink"></image>
+    <image offset="277,217" id="i-o_white"></image>
+  </imageatlas>
+  <tileset>
+    <tile id="o_red"><image ref="i-o_red"/></tile>
+    <tile id="o_yellow"><image ref="i-o_yellow"/></tile>
+    <tile id="o_lightgreen"><image ref="i-o_lightgreen"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+  </tileset>
+
+  <rectmap id="map0" tile_size="20x20" origin="0,0,0">
+
+    <column num="0">
+      <cell tile="o_red" right='yes'/>
+      <cell tile="o_yellow" />
+      <cell tile="o_orange" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column> 
+
+    <column num="1">
+      <cell tile="o_red" />
+      <cell tile="o_yellow" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column>
+ 
+    <column num="2">
+      <cell tile="o_red" />
+      <cell tile="o_yellow" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column>
+ 
+    <column num="3">
+      <cell tile="o_red" />
+      <cell tile="o_yellow" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column>
+ 
+    <column num="4">
+      <cell tile="o_red" />
+      <cell tile="o_yellow" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column>
+ 
+    <column num="5">
+      <cell tile="o_red" />
+      <cell tile="o_yellow" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column>
+ 
+    <column num="6">
+      <cell tile="o_red" />
+      <cell tile="o_yellow" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column>
+ 
+    <column num="7">
+      <cell tile="o_red" />
+      <cell tile="o_yellow" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column>
+ 
+    <column num="8">
+      <cell tile="o_red" />
+      <cell tile="o_yellow" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column>
+ 
+    <column num="9">
+      <cell tile="o_red" />
+      <cell tile="o_yellow" />
+      <cell tile="o_lightgreen" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+      <cell tile="o_orange" />
+    </column>
+  </rectmap>
+</resource>
