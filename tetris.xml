@@ -15,45 +15,43 @@
   </imageatlas>
   <tileset>
     <tile id="o_red"><image ref="i-o_red"/></tile>
+    <tile id="o_orange"><image ref="i-o_orange"/></tile>
     <tile id="o_yellow"><image ref="i-o_yellow"/></tile>
     <tile id="o_lightgreen"><image ref="i-o_lightgreen"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
-    <tile id="o_orange"><image ref="i-o_orange"/></tile>
+    <tile id="o_green"><image ref="i-o_green"/></tile>
+    <tile id="o_lightblue"><image ref="i-o_lightblue"/></tile>
+    <tile id="o_blue"><image ref="i-o_blue"/></tile>
+    <tile id="o_purple"><image ref="i-o_purple"/></tile>
+    <tile id="o_pink"><image ref="i-o_pink"/></tile>
+    <tile id="o_deeppink"><image ref="i-o_deeppink"/></tile>
+    <tile id="o_white"><image ref="i-o_white"/></tile>
   </tileset>
 
   <rectmap id="map0" tile_size="20x20" origin="0,0,0">
 
     <column num="0">
-      <cell tile="o_red" right='yes'/>
-      <cell tile="o_yellow" />
-      <cell tile="o_orange" />
-      <cell tile="o_lightgreen" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
-      <cell tile="o_orange" />
+      <cell tile="o_white" right='yes'/>
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
     </column> 
 
     <column num="1">
