@@ -5,10 +5,7 @@ from time import sleep
 from random import randrange
 from subprocess import call
 
-# todo get python to clear screen during render.
-# todo make these two classes as modular as possible
-# todo get sleep timer
-# todo process_input gets command line inputs
+# TODOs
 # rotation refinement = http://gamedev.stackexchange.com/questions/17974/how-to-rotate-blocks-in-tetris
 
 
@@ -45,6 +42,12 @@ class Block:
             y = coord[1] + self.board_location[1]
             bc.append([x, y])
         return bc
+
+    def board_coords_colmajor(self):
+        bc_colmajor = []
+        for x,y in self.board_coords():
+            bc_colmajor.append([x, 21 - y]) 
+        return bc_colmajor
 
     def rotate(self, direction):
         if direction == 'clockwise':
