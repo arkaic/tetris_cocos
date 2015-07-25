@@ -10,6 +10,11 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
     is_event_handler = True
     cur_spritename = "square"
     move_step = 20
+    pressed = False
+    # leftpressed = False
+    # rightpressed = False
+    # downpressed = False
+    # uppressed = False
 
     def __init__(self, xmlpath):
         super(TestRectMapLayerWrapper, self).__init__()
@@ -40,20 +45,18 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
         if not self.are_actions_running() and len(keyspressed) > 0:
             for k in keyspressed:
                 self._update_pos(k, self.move_step)
-
-        self.schedule_interval(self._button_held, .15)
+        if self.pressed is False:
+            self.pressed = True
+            self.schedule_interval(self._button_held, .15)
 
     def on_key_release(self, key, modifiers):
         self.keys_pressed.discard(key)
         if len(self.keys_pressed) is 0:
+            self.pressed = False
             self.unschedule(self._button_held)
 
     def _update_pos(self, dir, step):
         keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
-        print(keyspressed)
-        # import pdb; pdb.set_trace()
-        # sp = self.tetris_maplayer.children_names['square']
-        # s = self.tetris_maplayer.get('square')
         sp = self.get(self.cur_spritename)
         x,y = sp.position
         if dir == 'DOWN':
