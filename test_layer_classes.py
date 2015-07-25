@@ -7,7 +7,9 @@ from cocos.sprite import Sprite
 class TestRectMapLayerWrapper(layer.ScrollableLayer):
     # TODO in future, i could avoid subclassing and try to handle events manually
     # as showin in tutorial
+    is_event_handler = True
     cur_spritename = "square"
+    move_step = 20
 
     def __init__(self, xmlpath):
         super(TestRectMapLayerWrapper, self).__init__()
@@ -21,11 +23,47 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
         sprite = Sprite(self.tetris_maplayer.cells[0][0].tile.image)
         sprite.position = (self.tetris_maplayer.cells[5][10].x + 9, 
                            self.tetris_maplayer.cells[5][10].y + 9)
-        self.tetris_maplayer.add(sprite)
+        self.add(sprite, z=1, name=self.cur_spritename)
         self.cur_sprite = sprite
         self.keys_pressed = set()
-        # self.schedule_interval(self.act_on_input, .033)
+        # self.schedule_interval(self._button_held, .15)
 
+    def _button_held(self, dt):
+        keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
+        if len(keyspressed) > 0:
+            for k in keyspressed:
+                self._update_pos(k, self.move_step)
+    
+    def on_key_press(self, key, modifiers):
+        self.keys_pressed.add(key)
+        keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
+        if not self.are_actions_running() and len(keyspressed) > 0:
+            for k in keyspressed:
+                self._update_pos(k, self.move_step)
+
+        self.schedule_interval(self._button_held, .15)
+
+    def on_key_release(self, key, modifiers):
+        self.keys_pressed.discard(key)
+        if len(self.keys_pressed) is 0:
+            self.unschedule(self._button_held)
+
+    def _update_pos(self, dir, step):
+        keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
+        print(keyspressed)
+        # import pdb; pdb.set_trace()
+        # sp = self.tetris_maplayer.children_names['square']
+        # s = self.tetris_maplayer.get('square')
+        sp = self.get(self.cur_spritename)
+        x,y = sp.position
+        if dir == 'DOWN':
+            sp.do(Place((x, y - step)))
+        elif dir == 'UP':
+            sp.do(Place((x, y + step)))
+        elif dir == 'RIGHT':
+            sp.do(Place((x + step, y)))
+        elif dir == 'LEFT':
+            sp.do(Place((x - step, y)))
 
     def run(self):
         self.add(self.tetris_maplayer)
