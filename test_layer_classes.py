@@ -1,8 +1,23 @@
 from __future__ import division, print_function, unicode_literals
 import tetris, cocos, pyglet
-from cocos import layer, sprite
+from cocos import layer
 from cocos.actions import *
 from cocos.sprite import Sprite
+
+class TestMySprite(Sprite):
+    coords = None
+
+    def __init__(self, image, coords, position=(0, 0), rotation=0, scale=1,
+                 opacity = 255, color=(255, 255, 255), anchor = None):
+        super(TestMySprite, self).__init__(image, position=position, rotation=rotation, scale=scale,
+            opacity=opacity, color=color, anchor=anchor)
+        self.coords = coords
+
+    def get_coords(self):
+        return self.coords
+
+    def set_coords(self, c):
+        self.coords = c
 
 class TestRectMapLayerWrapper(layer.ScrollableLayer):
     # TODO in future, i could avoid subclassing and try to handle events manually
@@ -11,10 +26,6 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
     cur_spritename = "square"
     move_step = 20
     pressed = False
-    # leftpressed = False
-    # rightpressed = False
-    # downpressed = False
-    # uppressed = False
 
     def __init__(self, xmlpath):
         super(TestRectMapLayerWrapper, self).__init__()
@@ -25,19 +36,14 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
 
         # TODO using image from grid for a sprite, little messy
         # TODO add sprite with name param too
-        sprite = Sprite(self.tetris_maplayer.cells[0][0].tile.image)
-        sprite.position = (self.tetris_maplayer.cells[5][10].x + 9, 
-                           self.tetris_maplayer.cells[5][10].y + 9)
+        start_coords = (5,10)
+        i_start, j_start = start_coords
+        sprite = TestMySprite(self.tetris_maplayer.cells[0][0].tile.image, start_coords)
+        sprite.position = (self.tetris_maplayer.cells[i_start][j_start].x + 9, 
+                           self.tetris_maplayer.cells[i_start][j_start].y + 9)
         self.add(sprite, z=1, name=self.cur_spritename)
         self.cur_sprite = sprite
         self.keys_pressed = set()
-        # self.schedule_interval(self._button_held, .15)
-
-    def _button_held(self, dt):
-        keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
-        if len(keyspressed) > 0:
-            for k in keyspressed:
-                self._update_pos(k, self.move_step)
     
     def on_key_press(self, key, modifiers):
         self.keys_pressed.add(key)
@@ -55,18 +61,32 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
             self.pressed = False
             self.unschedule(self._button_held)
 
+    def _button_held(self, dt):
+        keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
+        if len(keyspressed) > 0:
+            for k in keyspressed:
+                self._update_pos(k, self.move_step)
+
     def _update_pos(self, dir, step):
         keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
         sp = self.get(self.cur_spritename)
-        x,y = sp.position
+        if sp == None: return
+        i,j = sp.get_coords()
+        spritecell = self.tetris_maplayer.cells[i][j]
         if dir == 'DOWN':
-            sp.do(Place((x, y - step)))
+            newcell = self.tetris_maplayer.cells[i][j-1]
+            sp.set_coords((i, j-1))
+            sp.do(Place((newcell.x+9, newcell.y+9)))
         elif dir == 'UP':
-            sp.do(Place((x, y + step)))
+            self.remove(sp)
         elif dir == 'RIGHT':
-            sp.do(Place((x + step, y)))
+            newcell = self.tetris_maplayer.cells[i+1][j]
+            sp.set_coords((i+1, j))
+            sp.do(Place((newcell.x+9, newcell.y+9)))
         elif dir == 'LEFT':
-            sp.do(Place((x - step, y)))
+            newcell = self.tetris_maplayer.cells[i-1][j]
+            sp.set_coords((i-1, j))
+            sp.do(Place((newcell.x+9, newcell.y+9)))
 
     def run(self):
         self.add(self.tetris_maplayer)
