@@ -88,6 +88,34 @@ class Board:
         s += '  - - - - - - - - - -\n'
         return s
 
+    # none supplied, current block => nothing happens
+    # none supplied, no current => get random
+    # supplied, current => nothing happens
+    # supplied, no current => use supplied
+    def new_block(self, blockchar=None):
+        if self.current_block:
+            raise ShouldntHappenError("Getting a new block without removing current")
+            sys.exit()
+        if blockchar is None:             
+            r = randrange(0, 7)
+            if r == 0:
+                self.current_block = Block('l')
+            elif r == 1:
+                self.current_block = Block('j')
+            elif r == 2:
+                self.current_block = Block('i')
+            elif r == 3:
+                self.current_block = Block('o')
+            elif r == 4:
+                self.current_block = Block('s')
+            elif r == 5:
+                self.current_block = Block('z')
+            elif r == 6:
+                self.current_block = Block('t')
+        else:
+            self.current_block = Block(blockchar)
+        self._draw(self.current_block.char)
+
     def move_block_down(self):
         if not self.current_block:
             print('not moving down')
@@ -196,34 +224,6 @@ class Board:
                 for x in range(10):
                     self.matrix[x][y+1] = self.matrix[x][y]
         return True
-
-    # none supplied, current block => nothing happens
-    # none supplied, no current => get random
-    # supplied, current => nothing happens
-    # supplied, no current => use supplied
-    def new_block(self, blockchar=None):
-        if self.current_block:
-            raise ShouldntHappenError("Getting a new block without removing current")
-            sys.exit()
-        if blockchar is None:             
-            r = randrange(0, 7)
-            if r == 0:
-                self.current_block = Block('l')
-            elif r == 1:
-                self.current_block = Block('j')
-            elif r == 2:
-                self.current_block = Block('i')
-            elif r == 3:
-                self.current_block = Block('o')
-            elif r == 4:
-                self.current_block = Block('s')
-            elif r == 5:
-                self.current_block = Block('z')
-            elif r == 6:
-                self.current_block = Block('t')
-        else:
-            self.current_block = Block(blockchar)
-        self._draw(self.current_block.char)
 
     def _draw(self, char):
         for x, y in self.current_block.board_coords():
