@@ -4,12 +4,13 @@ from cocos import layer
 from cocos.actions import *
 from cocos.sprite import Sprite
 
-class TestMySprite(Sprite):
+class MyTestSprite(Sprite):
     coords = None
+    id = None
 
     def __init__(self, image, coords, position=(0, 0), rotation=0, scale=1,
                  opacity = 255, color=(255, 255, 255), anchor = None):
-        super(TestMySprite, self).__init__(image, position=position, rotation=rotation, scale=scale,
+        super(MyTestSprite, self).__init__(image, position=position, rotation=rotation, scale=scale,
             opacity=opacity, color=color, anchor=anchor)
         self.coords = coords
 
@@ -19,46 +20,53 @@ class TestMySprite(Sprite):
     def set_coords(self, c):
         self.coords = c
 
+
 class TestRectMapLayerWrapper(layer.ScrollableLayer):
     # TODO in future, i could avoid subclassing and try to handle events manually
     # as showin in tutorial
     is_event_handler = True
     cur_spritename = "square"
     move_step = 20
-    pressed = False
+    ispressed = False
+    keys_pressed = set()
+    tetrismodel = tetris.Board()
+    cur_sprites = []
 
     def __init__(self, xmlpath):
         super(TestRectMapLayerWrapper, self).__init__()
         r = cocos.tiles.load('tetris.xml')  #['map0'] # TODO hardcoded
         self.tetris_maplayer = r['map0']
+        print("{} x {}".format(len(self.tetris_maplayer.cells), len(self.tetris_maplayer.cells[0])))
         x,y = cocos.director.director.get_window_size()
         self.tetris_maplayer.set_view(0, 0, x, y)
 
         # TODO using image from grid for a sprite, little messy
         # TODO add sprite with name param too
-        start_coords = (5,10)
-        i_start, j_start = start_coords
-        sprite = TestMySprite(self.tetris_maplayer.cells[0][0].tile.image, start_coords)
-        sprite.position = (self.tetris_maplayer.cells[i_start][j_start].x + 9, 
-                           self.tetris_maplayer.cells[i_start][j_start].y + 9)
-        self.add(sprite, z=1, name=self.cur_spritename)
-        self.cur_sprite = sprite
-        self.keys_pressed = set()
+        # Add group of sprites based on current block
+        self.tetrismodel.new_block('t')
+        i = 0
+        basename = self.tetrismodel.current_block.char
+        for x,y in self.tetrismodel.current_block.board_coords_colmajor():
+            sprite = MyTestSprite(self.tetris_maplayer.cells[0][0].tile.image, (x, y))
+            sprite.position = (self.tetris_maplayer.cells[x][y].x + 9,
+                               self.tetris_maplayer.cells[x][y].y + 9)
+            sprite.id = i
+            self.add(sprite, z=1, name=(basename + str(i)))
+            self.cur_sprites.append(sprite)
+            i += 1
     
     def on_key_press(self, key, modifiers):
-        self.keys_pressed.add(key)
-        keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
-        if not self.are_actions_running() and len(keyspressed) > 0:
+        if not self.keys_pressed:
+            self.keys_pressed.add(key)
+            keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
             for k in keyspressed:
                 self._update_pos(k, self.move_step)
-        if self.pressed is False:
-            self.pressed = True
-            self.schedule_interval(self._button_held, .15)
+            self.schedule_interval(self._button_held, .10)
 
     def on_key_release(self, key, modifiers):
         self.keys_pressed.discard(key)
         if len(self.keys_pressed) is 0:
-            self.pressed = False
+            self.ispressed = False
             self.unschedule(self._button_held)
 
     def _button_held(self, dt):
@@ -68,25 +76,32 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
                 self._update_pos(k, self.move_step)
 
     def _update_pos(self, dir, step):
-        keyspressed = [pyglet.window.key.symbol_string(k) for k in self.keys_pressed]
-        sp = self.get(self.cur_spritename)
-        if sp == None: return
-        i,j = sp.get_coords()
-        spritecell = self.tetris_maplayer.cells[i][j]
         if dir == 'DOWN':
-            newcell = self.tetris_maplayer.cells[i][j-1]
-            sp.set_coords((i, j-1))
-            sp.do(Place((newcell.x+9, newcell.y+9)))
+            pass
         elif dir == 'UP':
-            self.remove(sp)
+            # TODO rotate block
+            pass
         elif dir == 'RIGHT':
-            newcell = self.tetris_maplayer.cells[i+1][j]
-            sp.set_coords((i+1, j))
-            sp.do(Place((newcell.x+9, newcell.y+9)))
+            self.tetrismodel.move_block_right()
+            for sprite in self.cur_sprites:
+                x_model, y_model = self.tetrismodel.current_block.board_coords_colmajor()[sprite.id]
+                cell = self.tetris_maplayer.cells[x_model][y_model]
+                sprite.set_coords((x_model, y_model))
+                sprite.do(Place((cell.x + 9, cell.y + 9)))
         elif dir == 'LEFT':
-            newcell = self.tetris_maplayer.cells[i-1][j]
-            sp.set_coords((i-1, j))
-            sp.do(Place((newcell.x+9, newcell.y+9)))
+            self.tetrismodel.move_block_left()
+            for sprite in self.cur_sprites:
+                x_model, y_model = self.tetrismodel.current_block.board_coords_colmajor()[sprite.id]
+                cell = self.tetris_maplayer.cells[x_model][y_model]
+                sprite.set_coords((x_model, y_model))
+                sprite.do(Place((cell.x + 9, cell.y + 9)))
+
+    def _check_movable(self, dir):
+        for sprite in self.cur_sprites:
+            i, j = sprite.get_coords()
+            if (dir == 'RIGHT' and i >= 9) or (dir == 'LEFT' and i <= 0):
+                return False
+        return True
 
     def run(self):
         self.add(self.tetris_maplayer)
