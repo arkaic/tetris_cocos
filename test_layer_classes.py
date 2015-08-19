@@ -36,18 +36,19 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
         super(TestRectMapLayerWrapper, self).__init__()
         r = cocos.tiles.load('tetris.xml')  #['map0'] # TODO hardcoded
         self.tetris_maplayer = r['map0']
+        self.sandbox = r['sandbox']  # Used as the palette
         print("{} x {}".format(len(self.tetris_maplayer.cells), len(self.tetris_maplayer.cells[0])))
+
+        # Set size and show the grid
         x,y = cocos.director.director.get_window_size()
         self.tetris_maplayer.set_view(0, 0, x, y)
 
-        # TODO using image from grid for a sprite, little messy
-        # TODO add sprite with name param too
         # Add group of sprites based on current block
         self.tetrismodel.new_block('t')
         i = 0
-        basename = self.tetrismodel.current_block.char
+        basename = self.tetrismodel.current_block.char        
         for x,y in self.tetrismodel.current_block.board_coords_colmajor():
-            sprite = MyTestSprite(self.tetris_maplayer.cells[0][0].tile.image, (x, y))
+            sprite = MyTestSprite(self.sandbox.cells[0][5].tile.image, (x, y))
             sprite.position = (self.tetris_maplayer.cells[x][y].x + 9,
                                self.tetris_maplayer.cells[x][y].y + 9)
             sprite.id = i
@@ -82,6 +83,8 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
             # TODO rotate block
             pass
         elif dir == 'RIGHT':
+            # The cell is reference to the grid location and its pixel x,y is 
+            # needed for the actual sprite placing
             self.tetrismodel.move_block_right()
             for sprite in self.cur_sprites:
                 x_model, y_model = self.tetrismodel.current_block.board_coords_colmajor()[sprite.id]
