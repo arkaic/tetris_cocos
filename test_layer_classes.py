@@ -30,7 +30,8 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
     ispressed = False
     keys_pressed = set()
     tetrismodel = tetris.Board()
-    cur_sprites = []
+    cur_block_sprites = []
+    all_sprites = []
 
     def __init__(self, xmlpath):
         super(TestRectMapLayerWrapper, self).__init__()
@@ -49,11 +50,12 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
         basename = self.tetrismodel.current_block.char        
         for x,y in self.tetrismodel.current_block.board_coords_colmajor():
             sprite = MyTestSprite(self.sandbox.cells[0][5].tile.image, (x, y))
-            sprite.position = (self.tetris_maplayer.cells[x][y].x + 9,
-                               self.tetris_maplayer.cells[x][y].y + 9)
             sprite.id = i
+            cell = self.tetris_maplayer.cells[x][y]
+            sprite.position = (cell.x + 9, cell.y + 9)
             self.add(sprite, z=1, name=(basename + str(i)))
-            self.cur_sprites.append(sprite)
+            self.cur_block_sprites.append(sprite)
+            self.all_sprites.append(sprite)
             i += 1
     
     def on_key_press(self, key, modifiers):
@@ -86,21 +88,21 @@ class TestRectMapLayerWrapper(layer.ScrollableLayer):
             # The cell is reference to the grid location and its pixel x,y is 
             # needed for the actual sprite placing
             self.tetrismodel.move_block_right()
-            for sprite in self.cur_sprites:
+            for sprite in self.cur_block_sprites:
                 x_model, y_model = self.tetrismodel.current_block.board_coords_colmajor()[sprite.id]
                 cell = self.tetris_maplayer.cells[x_model][y_model]
                 sprite.set_coords((x_model, y_model))
                 sprite.do(Place((cell.x + 9, cell.y + 9)))
         elif dir == 'LEFT':
             self.tetrismodel.move_block_left()
-            for sprite in self.cur_sprites:
+            for sprite in self.cur_block_sprites:
                 x_model, y_model = self.tetrismodel.current_block.board_coords_colmajor()[sprite.id]
                 cell = self.tetris_maplayer.cells[x_model][y_model]
                 sprite.set_coords((x_model, y_model))
                 sprite.do(Place((cell.x + 9, cell.y + 9)))
 
     def _check_movable(self, dir):
-        for sprite in self.cur_sprites:
+        for sprite in self.cur_block_sprites:
             i, j = sprite.get_coords()
             if (dir == 'RIGHT' and i >= 9) or (dir == 'LEFT' and i <= 0):
                 return False
