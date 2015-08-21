@@ -1,7 +1,8 @@
 import cocos, pyglet, sys
-from cocos import layer
+from cocos import layer, scene
 from cocos.actions import *
 from cocos.sprite import Sprite
+from cocos.director import director
 from random import randrange
 from pyglet.window import key
 
@@ -12,18 +13,30 @@ class SquareSprite(Sprite):
 
 class Block():
     """ References all SquareSprites and their location on the model 2D array.
-    Sprites will exist inside a bounding square that this class defines.
+    Sprites will exist inside an abstract bounding square that this class defines.
+
+    Each block will have following attributes:
+     * Bounding square coordinates for each sprite, relative to origin point 0,0.
+       (TODO or this is a SquareSprite attribute instead)
+     * Sprite grid coordinate that the origin point is mapped to.
     """
     # Notes: Formula for I and O block
-    # newXccw = centerX - y + centerY
-    # newYccw = centerY + x - centerX
-    # newXcw  = centerX + y - centerY
-    # newYcw  = centerY - x + centerX
+    # newXccw = centerX + centerY - y
+    # newYccw = centerY - centerX + x
+    # newXcw  = centerX - centerY + y
+    # newYcw  = centerX + centerY - x
     # Formula for rest
-    # ccw =>   x,y => -y,x
-    # cw  =>   x,y => y,-x
-    def __init__(self, block_char):
+    # ccw =>   x,y => -y, x
+    # cw  =>   x,y =>  y,-x
+
+    char = None
+    square_sprites = []
+    sprite_grid = None
+
+    def __init__(self, block_char, sprite_grid):
         self.char = block_char
+        self.sprite_grid = sprite_grid
+        self._make_sprites()
         # i = 0
         # basename = self.tetrismodel.current_block.char        
         # for x,y in self.tetrismodel.current_block.board_coords_colmajor():
@@ -35,6 +48,22 @@ class Block():
         #     self.cur_block_sprites.append(sprite)
         #     self.all_sprites.append(sprite)
         #     i += 1
+
+    def _make_sprites(self):
+        if char == 'I':
+            pass
+        elif char == 'J':
+            pass
+        elif char == 'L':
+            pass
+        elif char == 'O':
+            pass
+        elif char == 'S':
+            pass
+        elif char == 'Z':
+            pass
+        elif char == 'T':
+            pass
 
 
 class TetrisBoardLayer(layer.ScrollableLayer):
@@ -58,6 +87,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         super(TestRectMapLayerWrapper, self).__init__()        
         r = cocos.tiles.load('tetris.xml')  #['map0'] # TODO hardcoded
         self.tetris_maplayer = r['map0']
+        self.add(self.tetris_maplayer)
         self.sandbox = r['sandbox']  # Used as the palette
 
         # Set size and show the grid
@@ -68,9 +98,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.new_block('T')
 
     def _new_block(self, blockchar=None):
-        # none supplied, current block => nothing happens
+        # none supplied, current exists => nothing happens
         # none supplied, no current => get random
-        # supplied, current => nothing happens
+        # supplied, current exists => nothing happens
         # supplied, no current => use supplied
         if self.current_block:
             raise ShouldntHappenError("Getting a new block without removing current")
@@ -93,7 +123,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             elif r == 6:
                 self.current_block = Block('T')
         else:
-            self.current_block = Block(blockchar)
+            self.current_block = Block(blockchar, self.sprite_grid)
 
         # TODO draw the block's sprites on
 
@@ -118,13 +148,24 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
     def _move_block(self, dir):
         if dir == 'DOWN':
-            # TODO drop
+            # TODO 
+            # do drop:
+            #   - 
+            # if do clear:
+            #   - remove sprite from spritegrid
+            #   - remove sprite from block
+            #   - remove sprite visually
+            # make new block
             pass
         elif dir == 'UP':
             # TODO rotate
             pass
         elif dir == 'RIGHT':
             # TODO 
+            # Move block right
+            #   - check if any overlap with sprites when bounding square moves
+            #   - if no overlap, shift each sprite right on spritegrid
+            #   - move sprite visually on window
             pass
         elif dir == 'LEFT':
             pass
@@ -138,4 +179,9 @@ class ShouldntHappenError(UserWarning):
 ################################################################################
 
 if __name__ == '__main__':
+    # tetris_board = TetrisBoardLayer('tetris.xml')
+    # scroller = layer.ScrollingManager()
+    # scroller.set_focus(100, 200)
+    # scroller.add(tetris_board)
+    # director.run(scene.Scene(scroller))
     pass
