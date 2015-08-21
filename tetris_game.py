@@ -8,7 +8,15 @@ from pyglet.window import key
 
 
 class SquareSprite(Sprite):
-    pass
+    bounding_coord = None
+    
+    def __init__(self, image, coords, position=(0, 0), rotation=0, scale=1,
+                opacity=255, color=(255, 255, 255), anchor=None):
+        super(SquareSprite, self).__init__(image, position=position, 
+                rotation=rotation, scale=scale, opacity=opacity, color=color,
+                anchor=anchor)
+
+        self.bounding_coord = coords
 
 
 class Block():
@@ -30,40 +38,53 @@ class Block():
     # cw  =>   x,y =>  y,-x
 
     char = None
-    square_sprites = []
+    board_layer = None  # cocos parent layer
     sprite_grid = None
+    grid_coord = None
+    square_sprites = []
 
-    def __init__(self, block_char, sprite_grid):
+    def __init__(self, block_char, tetrisboardlayer, rotated_state):
         self.char = block_char
-        self.sprite_grid = sprite_grid
-        self._make_sprites()
-        # i = 0
-        # basename = self.tetrismodel.current_block.char        
-        # for x,y in self.tetrismodel.current_block.board_coords_colmajor():
-        #     sprite = MyTestSprite(self.sandbox.cells[0][5].tile.image, (x, y))
-        #     sprite.id = i
-        #     cell = self.tetris_maplayer.cells[x][y]
-        #     sprite.position = (cell.x + 9, cell.y + 9)
-        #     self.add(sprite, z=1, name=(basename + str(i)))
-        #     self.cur_block_sprites.append(sprite)
-        #     self.all_sprites.append(sprite)
-        #     i += 1
+        self.board_layer = tetrisboardlayer
+        self.sprite_grid = tetrisboardlayer.sprite_grid
 
-    def _make_sprites(self):
+        self._make_sprites(rotated_state)
+
+    def _make_sprites(self, state):
         if char == 'I':
-            pass
+            self.grid_coord = (4, 19)
+            img = self.board_layer.sandbox.cells[0][0].tile.image
+            square_sprites.append(SquareSprite(img, (-1, 1)))
+            square_sprites.append(SquareSprite(img, (0, 1)))
+            square_sprites.append(SquareSprite(img, (1, 1)))
+            square_sprites.append(SquareSprite(img, (2, 1)))            
         elif char == 'J':
-            pass
+            self.grid_coord = (4, 20)
+            img = self.board_layer.sandbox.cells[0][1].tile.image
         elif char == 'L':
-            pass
+            self.grid_coord = (4, 20)
+            img = self.board_layer.sandbox.cells[0][2].tile.image
         elif char == 'O':
-            pass
+            self.grid_coord = (4, 20)
+            img = self.board_layer.sandbox.cells[0][3].tile.image
         elif char == 'S':
-            pass
+            self.grid_coord = (4, 20)
+            img = self.board_layer.sandbox.cells[0][4].tile.image
         elif char == 'Z':
-            pass
+            self.grid_coord = (4, 20)
+            img = self.board_layer.sandbox.cells[0][5].tile.image
         elif char == 'T':
-            pass
+            self.grid_coord = (4, 20)
+            img = self.board_layer.sandbox.cells[0][6].tile.image
+
+        # Draw sprites on layer
+        for s in square_sprites:
+            x = s.bounding_coord[0] + self.grid_coord[0]
+            y = s.bounding_coord[1] + self.grid_coord[1]
+            texture_cell = self.board_layer.tetris_maplayer.cells[x][y]
+            s.position = (texture_cell.x + 9, texture_cell.y + 9)
+            self.board_layer.add(s, z=1)
+            
 
 
 class TetrisBoardLayer(layer.ScrollableLayer):
@@ -95,7 +116,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.tetris_maplayer.set_view(0, 0, x, y)
 
         # Add group of sprites based on current block
-        self.new_block('T')
+        self.new_block()
 
     def _new_block(self, blockchar=None):
         # none supplied, current exists => nothing happens
@@ -106,26 +127,26 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             raise ShouldntHappenError("Getting a new block without removing current")
             sys.exit()
 
+        rotated_state = 0  # Change to rng if needed to randomize
         if blockchar is None:             
             r = randrange(0, 7)
             if r == 0:
-                self.current_block = Block('L')
+                self.current_block = Block('L', self, rotated_state)
             elif r == 1:
-                self.current_block = Block('J')
+                self.current_block = Block('J', self, rotated_state)
             elif r == 2:
-                self.current_block = Block('I')
+                self.current_block = Block('I', self, rotated_state)
             elif r == 3:
-                self.current_block = Block('O')
+                self.current_block = Block('O', self, rotated_state)
             elif r == 4:
-                self.current_block = Block('S')
+                self.current_block = Block('S', self, rotated_state)
             elif r == 5:
-                self.current_block = Block('Z')
+                self.current_block = Block('Z', self, rotated_state)
             elif r == 6:
-                self.current_block = Block('T')
+                self.current_block = Block('T', self, rotated_state)
         else:
-            self.current_block = Block(blockchar, self.sprite_grid)
-
-        # TODO draw the block's sprites on
+            self.current_block = Block(blockchar, self, rotated_state)
+        # TODO draw the block's sprites on here?
 
     def on_key_press(self, key, modifiers):
         if not self.keys_pressed:

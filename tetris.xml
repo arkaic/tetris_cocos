@@ -33,13 +33,13 @@
       <cell tile="o_red" />
       <cell tile="o_orange"/>
       <cell tile="o_yellow" />
-      <cell tile="o_lightgreen" />
       <cell tile="o_green" />
-      <cell tile="o_lightblue" />
       <cell tile="o_blue" />
       <cell tile="o_purple" />
       <cell tile="o_pink" />
       <cell tile="o_deeppink" />
+      <cell tile="o_lightblue" />
+      <cell tile="o_lightgreen" />
       <cell tile="o_white" />
     </column>
   </rectmap>
