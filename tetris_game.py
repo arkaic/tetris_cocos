@@ -54,36 +54,52 @@ class Block():
         if char == 'I':
             self.grid_coord = (4, 19)
             img = self.board_layer.sandbox.cells[0][0].tile.image
-            square_sprites.append(SquareSprite(img, (-1, 1)))
-            square_sprites.append(SquareSprite(img, (0, 1)))
-            square_sprites.append(SquareSprite(img, (1, 1)))
-            square_sprites.append(SquareSprite(img, (2, 1)))            
+            self.square_sprites.append(SquareSprite(img, (-1, 1)))
+            self.square_sprites.append(SquareSprite(img, (0, 1)))
+            self.square_sprites.append(SquareSprite(img, (1, 1)))
+            self.square_sprites.append(SquareSprite(img, (2, 1)))
         elif char == 'J':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][1].tile.image
+            self.square_sprites.append(SquareSprite(img, (-1, 1)))
+            self.square_sprites.append(SquareSprite(img, (-1, 0)))
+            self.square_sprites.append(SquareSprite(img, (0, 0)))
+            self.square_sprites.append(SquareSprite(img, (1, 0)))
         elif char == 'L':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][2].tile.image
+            self.square_sprites.append(SquareSprite(img, (-1, 0)))
+            self.square_sprites.append(SquareSprite(img, (0, 0)))
+            self.square_sprites.append(SquareSprite(img, (1, 0)))
+            self.square_sprites.append(SquareSprite(img, (1, 1)))
         elif char == 'O':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][3].tile.image
+            self.square_sprites.append(SquareSprite(img, (0, 1)))
+            self.square_sprites.append(SquareSprite(img, (0, 0)))
+            self.square_sprites.append(SquareSprite(img, (1, 1)))
+            self.square_sprites.append(SquareSprite(img, (1, 0)))
         elif char == 'S':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][4].tile.image
-        elif char == 'Z':
-            self.grid_coord = (4, 20)
-            img = self.board_layer.sandbox.cells[0][5].tile.image
+            self.square_sprites.append(SquareSprite(img, (-1, 0)))
+            self.square_sprites.append(SquareSprite(img, (0, 0)))
+            self.square_sprites.append(SquareSprite(img, (0, 1)))
+            self.square_sprites.append(SquareSprite(img, (1, 1)))
         elif char == 'T':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][6].tile.image
-
-        # Draw sprites on layer
-        for s in square_sprites:
-            x = s.bounding_coord[0] + self.grid_coord[0]
-            y = s.bounding_coord[1] + self.grid_coord[1]
-            texture_cell = self.board_layer.tetris_maplayer.cells[x][y]
-            s.position = (texture_cell.x + 9, texture_cell.y + 9)
-            self.board_layer.add(s, z=1)
+            self.square_sprites.append(SquareSprite(img, (-1, 0)))
+            self.square_sprites.append(SquareSprite(img, (0, 1)))
+            self.square_sprites.append(SquareSprite(img, (0, 0)))
+            self.square_sprites.append(SquareSprite(img, (1, 0)))
+        elif char == 'Z':
+            self.grid_coord = (4, 20)
+            img = self.board_layer.sandbox.cells[0][5].tile.image
+            self.square_sprites.append(SquareSprite(img, (-1, 1)))
+            self.square_sprites.append(SquareSprite(img, (0, 1)))
+            self.square_sprites.append(SquareSprite(img, (0, 0)))
+            self.square_sprites.append(SquareSprite(img, (1, 0)))
             
 
 
@@ -146,7 +162,14 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.current_block = Block('T', self, rotated_state)
         else:
             self.current_block = Block(blockchar, self, rotated_state)
-        # TODO draw the block's sprites on here?
+
+        # Draw sprites on layer
+        for s in self.current_block.square_sprites:
+            x = s.bounding_coord[0] + self.current_block.grid_coord[0]
+            y = s.bounding_coord[1] + self.current_block.grid_coord[1]
+            texture_cell = self.tetris_maplayer.cells[x][y]
+            s.position = (texture_cell.x + 9, texture_cell.y + 9)
+            self.add(s, z=1)
 
     def on_key_press(self, key, modifiers):
         if not self.keys_pressed:
