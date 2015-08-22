@@ -1,6 +1,5 @@
 import cocos, pyglet, sys
 from cocos import layer, scene
-from cocos.actions import *
 from cocos.sprite import Sprite
 from cocos.director import director
 from random import randrange
@@ -10,13 +9,13 @@ from pyglet import window
 class SquareSprite(Sprite):
     bounding_coord = None
     
-    def __init__(self, image, coords, position=(0, 0), rotation=0, scale=1,
+    def __init__(self, image, coord, position=(0, 0), rotation=0, scale=1,
                 opacity=255, color=(255, 255, 255), anchor=None):
         super(SquareSprite, self).__init__(image, position=position, 
                 rotation=rotation, scale=scale, opacity=opacity, color=color,
                 anchor=anchor)
 
-        self.bounding_coord = coords
+        self.bounding_coord = coord
 
 
 class Block():
@@ -47,7 +46,6 @@ class Block():
         self.char = block_char
         self.board_layer = tetrisboardlayer
         self.sprite_grid = tetrisboardlayer.sprite_grid
-
         self._make_sprites(rotated_state)
 
     def _make_sprites(self, state):
@@ -166,7 +164,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             self.current_block = Block(blockchar, self, rotated_state)
 
         # Draw sprites on layer
-        # print("{} x {}".format(len(self.tetris_maplayer.cells), len(self.tetris_maplayer.cells[0])))
         for s in self.current_block.square_sprites:
             x = s.bounding_coord[0] + self.current_block.grid_coord[0]
             y = s.bounding_coord[1] + self.current_block.grid_coord[1]
@@ -222,7 +219,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
 class ShouldntHappenError(UserWarning):
     pass
-
 
 ################################################################################
 
