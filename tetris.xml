@@ -46,14 +46,14 @@
 
   <rectmap id="map0" tile_size="20x20" origin="0,0,0">
     <column num="0">
-      <cell tile="o_orange" />
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
-      <cell tile="o_green" />
       <cell tile="o_white" />
       <cell tile="o_white" />
-      <cell tile="o_green" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
+      <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />

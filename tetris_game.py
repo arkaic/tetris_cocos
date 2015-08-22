@@ -4,7 +4,7 @@ from cocos.actions import *
 from cocos.sprite import Sprite
 from cocos.director import director
 from random import randrange
-from pyglet.window import key
+from pyglet import window
 
 
 class SquareSprite(Sprite):
@@ -51,49 +51,49 @@ class Block():
         self._make_sprites(rotated_state)
 
     def _make_sprites(self, state):
-        if char == 'I':
+        if self.char == 'I':
             self.grid_coord = (4, 19)
             img = self.board_layer.sandbox.cells[0][0].tile.image
             self.square_sprites.append(SquareSprite(img, (-1, 1)))
             self.square_sprites.append(SquareSprite(img, (0, 1)))
             self.square_sprites.append(SquareSprite(img, (1, 1)))
             self.square_sprites.append(SquareSprite(img, (2, 1)))
-        elif char == 'J':
+        elif self.char == 'J':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][1].tile.image
             self.square_sprites.append(SquareSprite(img, (-1, 1)))
             self.square_sprites.append(SquareSprite(img, (-1, 0)))
             self.square_sprites.append(SquareSprite(img, (0, 0)))
             self.square_sprites.append(SquareSprite(img, (1, 0)))
-        elif char == 'L':
+        elif self.char == 'L':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][2].tile.image
             self.square_sprites.append(SquareSprite(img, (-1, 0)))
             self.square_sprites.append(SquareSprite(img, (0, 0)))
             self.square_sprites.append(SquareSprite(img, (1, 0)))
             self.square_sprites.append(SquareSprite(img, (1, 1)))
-        elif char == 'O':
+        elif self.char == 'O':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][3].tile.image
             self.square_sprites.append(SquareSprite(img, (0, 1)))
             self.square_sprites.append(SquareSprite(img, (0, 0)))
             self.square_sprites.append(SquareSprite(img, (1, 1)))
             self.square_sprites.append(SquareSprite(img, (1, 0)))
-        elif char == 'S':
+        elif self.char == 'S':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][4].tile.image
             self.square_sprites.append(SquareSprite(img, (-1, 0)))
             self.square_sprites.append(SquareSprite(img, (0, 0)))
             self.square_sprites.append(SquareSprite(img, (0, 1)))
             self.square_sprites.append(SquareSprite(img, (1, 1)))
-        elif char == 'T':
+        elif self.char == 'T':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][6].tile.image
             self.square_sprites.append(SquareSprite(img, (-1, 0)))
             self.square_sprites.append(SquareSprite(img, (0, 1)))
             self.square_sprites.append(SquareSprite(img, (0, 0)))
             self.square_sprites.append(SquareSprite(img, (1, 0)))
-        elif char == 'Z':
+        elif self.char == 'Z':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][5].tile.image
             self.square_sprites.append(SquareSprite(img, (-1, 1)))
@@ -110,19 +110,21 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     # Notes: When clearing a line and going sprite by sprite, remove from model
     # array and then also remove the sprite from the BoardLayer
 
-    board_width = 10
-    board_height = 22
+    width = 10
+    height = 22
     is_event_handler = True
     keys_pressed = set()
-    sprite_grid =  = [[None for y in range(self.height)] for x in range(self.width)]
+    sprite_grid = None
     current_block = None
     tetris_maplayer = None
     sandbox = None
     # all_blocks = []  maybe i use it maybe i dont
 
     def __init__(self, xmlpath):
-        super(TestRectMapLayerWrapper, self).__init__()        
-        r = cocos.tiles.load('tetris.xml')  #['map0'] # TODO hardcoded
+        super(TetrisBoardLayer, self).__init__()
+
+        self.sprite_grid = [[None for y in range(self.height)] for x in range(self.width)]
+        r = cocos.tiles.load(xmlpath)  #['map0'] # TODO hardcoded
         self.tetris_maplayer = r['map0']
         self.add(self.tetris_maplayer)
         self.sandbox = r['sandbox']  # Used as the palette
@@ -132,7 +134,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.tetris_maplayer.set_view(0, 0, x, y)
 
         # Add group of sprites based on current block
-        self.new_block()
+        self._new_block()
 
     def _new_block(self, blockchar=None):
         # none supplied, current exists => nothing happens
@@ -164,9 +166,11 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             self.current_block = Block(blockchar, self, rotated_state)
 
         # Draw sprites on layer
+        # print("{} x {}".format(len(self.tetris_maplayer.cells), len(self.tetris_maplayer.cells[0])))
         for s in self.current_block.square_sprites:
             x = s.bounding_coord[0] + self.current_block.grid_coord[0]
             y = s.bounding_coord[1] + self.current_block.grid_coord[1]
+            print('{}, {}'.format(x,y))
             texture_cell = self.tetris_maplayer.cells[x][y]
             s.position = (texture_cell.x + 9, texture_cell.y + 9)
             self.add(s, z=1)
@@ -174,7 +178,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     def on_key_press(self, key, modifiers):
         if not self.keys_pressed:
             self.keys_pressed.add(key)
-            keyspressed = [key.symbol_string(k) for k in self.keys_pressed]
+            keyspressed = [window.key.symbol_string(k) for k in self.keys_pressed]
             for key in keyspressed:
                 self._move_block(key)
             self.schedule_interval(self._button_held, .10)
@@ -185,7 +189,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             self.unschedule(self._button_held)
 
     def _button_held(self, dt):
-        keyspressed = [key.symbol_string(key) for key in self.keys_pressed]
+        keyspressed = [window.key.symbol_string(key) for key in self.keys_pressed]
         if len(keyspressed) > 0:
             for key in keyspressed:
                 self._move_block(key)
@@ -223,9 +227,9 @@ class ShouldntHappenError(UserWarning):
 ################################################################################
 
 if __name__ == '__main__':
-    # tetris_board = TetrisBoardLayer('tetris.xml')
-    # scroller = layer.ScrollingManager()
-    # scroller.set_focus(100, 200)
-    # scroller.add(tetris_board)
-    # director.run(scene.Scene(scroller))
-    pass
+    director.init(resizable=True)
+    tetris_board = TetrisBoardLayer('tetris.xml')
+    scroller = layer.ScrollingManager()
+    scroller.set_focus(100, 200)
+    scroller.add(tetris_board)
+    director.run(scene.Scene(scroller))
