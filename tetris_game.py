@@ -49,55 +49,39 @@ class Block():
         self._make_sprites(rotated_state)
 
     def _make_sprites(self, state):
+        init_bounding_coords = []
+        img = None
         if self.char == 'I':
             self.grid_coord = (4, 19)
             img = self.board_layer.sandbox.cells[0][0].tile.image
-            self.square_sprites.append(SquareSprite(img, (-1, 1)))
-            self.square_sprites.append(SquareSprite(img, (0, 1)))
-            self.square_sprites.append(SquareSprite(img, (1, 1)))
-            self.square_sprites.append(SquareSprite(img, (2, 1)))
+            init_bounding_coords = [(-1,1), (0,1), (1,1), (2,1)]
         elif self.char == 'J':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][1].tile.image
-            self.square_sprites.append(SquareSprite(img, (-1, 1)))
-            self.square_sprites.append(SquareSprite(img, (-1, 0)))
-            self.square_sprites.append(SquareSprite(img, (0, 0)))
-            self.square_sprites.append(SquareSprite(img, (1, 0)))
+            init_bounding_coords = [(-1,1), (-1,0), (0,0), (1,0)]
         elif self.char == 'L':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][2].tile.image
-            self.square_sprites.append(SquareSprite(img, (-1, 0)))
-            self.square_sprites.append(SquareSprite(img, (0, 0)))
-            self.square_sprites.append(SquareSprite(img, (1, 0)))
-            self.square_sprites.append(SquareSprite(img, (1, 1)))
+            init_bounding_coords = [(-1,0), (0,0), (1,0), (1,1)]
         elif self.char == 'O':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][3].tile.image
-            self.square_sprites.append(SquareSprite(img, (0, 1)))
-            self.square_sprites.append(SquareSprite(img, (0, 0)))
-            self.square_sprites.append(SquareSprite(img, (1, 1)))
-            self.square_sprites.append(SquareSprite(img, (1, 0)))
+            init_bounding_coords = [(0,1), (0,0), (1,1), (1,0)]
         elif self.char == 'S':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][4].tile.image
-            self.square_sprites.append(SquareSprite(img, (-1, 0)))
-            self.square_sprites.append(SquareSprite(img, (0, 0)))
-            self.square_sprites.append(SquareSprite(img, (0, 1)))
-            self.square_sprites.append(SquareSprite(img, (1, 1)))
+            init_bounding_coords = [(-1,0), (0,0), (0,1), (1,1)]
         elif self.char == 'T':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][6].tile.image
-            self.square_sprites.append(SquareSprite(img, (-1, 0)))
-            self.square_sprites.append(SquareSprite(img, (0, 1)))
-            self.square_sprites.append(SquareSprite(img, (0, 0)))
-            self.square_sprites.append(SquareSprite(img, (1, 0)))
+            init_bounding_coords = [(-1,0), (0,1), (0,0), (1,0)]
         elif self.char == 'Z':
             self.grid_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][5].tile.image
-            self.square_sprites.append(SquareSprite(img, (-1, 1)))
-            self.square_sprites.append(SquareSprite(img, (0, 1)))
-            self.square_sprites.append(SquareSprite(img, (0, 0)))
-            self.square_sprites.append(SquareSprite(img, (1, 0)))
+            init_bounding_coords = [(-1,1), (0,1), (0,0), (1,0)]
+            
+        for c in init_bounding_coords:
+            self.square_sprites.append(SquareSprite(img, c))
             
 
 
@@ -197,7 +181,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             # do drop:
             #   - 
             # if do clear:
-            #   - remove sprite from spritegrid
+            #   - remove sprite f.rom spritegrid
             #   - remove sprite from block
             #   - remove sprite visually
             # make new block
