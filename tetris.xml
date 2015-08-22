@@ -67,9 +67,11 @@
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
+      <cell tile="o_white" />
     </column> 
 
     <column num="1">
+      <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
@@ -115,9 +117,11 @@
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
+      <cell tile="o_white" />
     </column>
  
     <column num="3">
+      <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
@@ -163,9 +167,11 @@
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
+      <cell tile="o_white" />
     </column>
  
     <column num="5">
+      <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
@@ -211,9 +217,11 @@
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
+      <cell tile="o_white" />
     </column>
  
     <column num="7">
+      <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
@@ -259,9 +267,11 @@
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
+      <cell tile="o_white" />
     </column>
  
     <column num="9">
+      <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
       <cell tile="o_white" />
