@@ -39,7 +39,7 @@ class Block():
     char = None
     board_layer = None  # cocos parent layer
     sprite_grid = None
-    grid_coord = None
+    gridlocation_coord = None
     square_sprites = []
 
     def __init__(self, block_char, tetrisboardlayer, rotated_state):
@@ -48,40 +48,64 @@ class Block():
         self.sprite_grid = tetrisboardlayer.sprite_grid
         self._make_sprites(rotated_state)
 
+    def move_block(self, direction):
+        if not _can_move_block(direction):
+            return
+        for sprite in self.square_sprites:
+            if direction == 'LEFT':
+                pass
+            elif direction == 'RIGHT':
+                pass
+
     def _make_sprites(self, state):
         init_bounding_coords = []
         img = None
         if self.char == 'I':
-            self.grid_coord = (4, 19)
+            self.gridlocation_coord = (4, 19)
             img = self.board_layer.sandbox.cells[0][0].tile.image
             init_bounding_coords = [(-1,1), (0,1), (1,1), (2,1)]
         elif self.char == 'J':
-            self.grid_coord = (4, 20)
+            self.gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][1].tile.image
             init_bounding_coords = [(-1,1), (-1,0), (0,0), (1,0)]
         elif self.char == 'L':
-            self.grid_coord = (4, 20)
+            self.gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][2].tile.image
             init_bounding_coords = [(-1,0), (0,0), (1,0), (1,1)]
         elif self.char == 'O':
-            self.grid_coord = (4, 20)
+            self.gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][3].tile.image
             init_bounding_coords = [(0,1), (0,0), (1,1), (1,0)]
         elif self.char == 'S':
-            self.grid_coord = (4, 20)
+            self.gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][4].tile.image
             init_bounding_coords = [(-1,0), (0,0), (0,1), (1,1)]
         elif self.char == 'T':
-            self.grid_coord = (4, 20)
+            self.gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][6].tile.image
             init_bounding_coords = [(-1,0), (0,1), (0,0), (1,0)]
         elif self.char == 'Z':
-            self.grid_coord = (4, 20)
+            self.gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][5].tile.image
             init_bounding_coords = [(-1,1), (0,1), (0,0), (1,0)]
-            
-        for c in init_bounding_coords:
-            self.square_sprites.append(SquareSprite(img, c))
+
+        # Add sprites to both the member list and the grid model
+        for x, y in init_bounding_coords:
+            sprite = SquareSprite(img, (x, y))
+            self.square_sprites.append(sprite)
+            x_loc, y_loc = self.gridlocation_coord
+            self.sprite_grid[x + x_loc][y + y_loc] = sprite
+
+    def _can_move_block(self, direction):
+        for sprite in self.square_sprites:
+            bounding_x, bounding_y = sprite.bounding_coord
+            grid_x, grid_y = self.gridlocation_coord
+            if direction == 'LEFT':
+                # if bounding_x + grid_x is outside of board or overlapping something, return false
+                pass
+            elif direction == 'RIGHT':
+                pass
+        return True
             
 
 
@@ -149,8 +173,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         # Draw sprites on layer
         for s in self.current_block.square_sprites:
-            x = s.bounding_coord[0] + self.current_block.grid_coord[0]
-            y = s.bounding_coord[1] + self.current_block.grid_coord[1]
+            x = s.bounding_coord[0] + self.current_block.gridlocation_coord[0]
+            y = s.bounding_coord[1] + self.current_block.gridlocation_coord[1]
             print('{}, {}'.format(x,y))
             texture_cell = self.tetris_maplayer.cells[x][y]
             s.position = (texture_cell.x + 9, texture_cell.y + 9)
