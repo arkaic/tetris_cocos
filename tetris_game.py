@@ -50,12 +50,13 @@ class Block():
 
     def move_block(self, direction):
         if not _can_move_block(direction):
-            return
+            return False
         for sprite in self.square_sprites:
             if direction == 'LEFT':
                 pass
             elif direction == 'RIGHT':
                 pass
+        return True
 
     def _make_sprites(self, state):
         init_bounding_coords = []
@@ -97,14 +98,22 @@ class Block():
             self.sprite_grid[x + x_loc][y + y_loc] = sprite
 
     def _can_move_block(self, direction):
+        """ Sprite coordinates are made up of the grid location offset by the 
+        bounding coords 
+        """
         for sprite in self.square_sprites:
-            bounding_x, bounding_y = sprite.bounding_coord
-            grid_x, grid_y = self.gridlocation_coord
+            sprite_x = sprite.bounding_coord[0] + self.gridlocation_coord[0]
+            sprite_y = sprite.bounding_coord[1] + self.gridlocation_coord[1]
             if direction == 'LEFT':
-                # if bounding_x + grid_x is outside of board or overlapping something, return false
-                pass
+                if sprite_x <= 0 or not self.sprite_grid[sprite_x - 1] == None:
+                    return False
             elif direction == 'RIGHT':
-                pass
+                if (sprite_x >= self.board_layer.width - 1) or not 
+                        self.sprite_grid[sprite_x + 1] == None:
+                    return False
+            elif direction == 'DOWN':
+                if sprite_y <= 0 or not self.sprite_grid[sprite_y - 1] == None:
+                    return False
         return True
             
 
