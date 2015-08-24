@@ -2,6 +2,7 @@ import cocos, pyglet, sys
 from cocos import layer, scene
 from cocos.sprite import Sprite
 from cocos.director import director
+from cocos.actions import *
 from random import randrange
 from pyglet import window
 
@@ -48,15 +49,34 @@ class Block():
         self.sprite_grid = tetrisboardlayer.sprite_grid
         self._make_sprites(rotated_state)
 
-    def move_block(self, direction):
-        if not _can_move_block(direction):
+    def move(self, direction):
+        """ Move sprite on sprite grid (and visually too?)
+        """
+        if not self._can_move(direction):
             return False
+
+        # Erase from sprite grid
         for sprite in self.square_sprites:
+            sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
+            self.sprite_grid[sprite_x][sprite_y] = None
+
+        # Put sprites into new locations by changing the grid location coord and 
+        # offsetting every sprite by it again.
+        prev_gridloc_x, prev_gridloc_y = self.gridlocation_coord
+        for sprite in self.square_sprites:            
             if direction == 'LEFT':
-                pass
+                self.gridlocation_coord = (prev_gridloc_x - 1, prev_gridloc_y)
             elif direction == 'RIGHT':
-                pass
+                self.gridlocation_coord = (prev_gridloc_x + 1, prev_gridloc_y)
+            elif direction == 'DOWN':
+                self.gridlocation_coord = (prev_gridloc_x, prev_gridloc_y - 1)
+            sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
+            self.sprite_grid[sprite_x][sprite_y] = sprite
         return True
+
+    def grid_coord(self, bound_coord):
+        return (bound_coord[0] + self.gridlocation_coord[0], 
+            bound_coord[1] + self.gridlocation_coord[1])
 
     def _make_sprites(self, state):
         init_bounding_coords = []
@@ -91,30 +111,40 @@ class Block():
             init_bounding_coords = [(-1,1), (0,1), (0,0), (1,0)]
 
         # Add sprites to both the member list and the grid model
-        for x, y in init_bounding_coords:
-            sprite = SquareSprite(img, (x, y))
+        for bounding_coord in init_bounding_coords:
+            sprite = SquareSprite(img, bounding_coord)
             self.square_sprites.append(sprite)
-            x_loc, y_loc = self.gridlocation_coord
-            self.sprite_grid[x + x_loc][y + y_loc] = sprite
+            sprite_x, sprite_y = self.grid_coord(bounding_coord)
+            self.sprite_grid[sprite_x][sprite_y] = sprite
 
-    def _can_move_block(self, direction):
+    def _can_move(self, direction):
         """ Sprite coordinates are made up of the grid location offset by the 
         bounding coords 
         """
         for sprite in self.square_sprites:
-            sprite_x = sprite.bounding_coord[0] + self.gridlocation_coord[0]
-            sprite_y = sprite.bounding_coord[1] + self.gridlocation_coord[1]
+            sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
             if direction == 'LEFT':
-                if sprite_x <= 0 or not self.sprite_grid[sprite_x - 1] == None:
+                if sprite_x <= 0:
+                    return False
+                if (not self._is_a_block_coord((sprite_x - 1, sprite_y)) and 
+                    self.sprite_grid[sprite_x - 1][sprite_y] != None):
                     return False
             elif direction == 'RIGHT':
-                if (sprite_x >= self.board_layer.width - 1) or not 
-                        self.sprite_grid[sprite_x + 1] == None:
+                if sprite_x >= self.board_layer.width - 1:
+                    return False
+                if (not self._is_a_block_coord((sprite_x + 1, sprite_y)) and 
+                    self.sprite_grid[sprite_x + 1][sprite_y] != None):
                     return False
             elif direction == 'DOWN':
                 if sprite_y <= 0 or not self.sprite_grid[sprite_y - 1] == None:
                     return False
         return True
+
+    def _is_a_block_coord(self, grid_coord):
+        for square in self.square_sprites:
+            if grid_coord == self.grid_coord(square.bounding_coord):
+                return True
+        return False
             
 
 
@@ -182,9 +212,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         # Draw sprites on layer
         for s in self.current_block.square_sprites:
-            x = s.bounding_coord[0] + self.current_block.gridlocation_coord[0]
-            y = s.bounding_coord[1] + self.current_block.gridlocation_coord[1]
-            print('{}, {}'.format(x,y))
+            x, y = self.current_block.grid_coord(s.bounding_coord)
             texture_cell = self.tetris_maplayer.cells[x][y]
             s.position = (texture_cell.x + 9, texture_cell.y + 9)
             self.add(s, z=1)
@@ -209,7 +237,22 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self._move_block(key)
 
     def _move_block(self, dir):
-        if dir == 'DOWN':
+        if dir == 'LEFT':
+            if self.current_block.move('LEFT'):
+                print("Move LEFT")
+                for sprite in self.current_block.square_sprites:
+                    x, y = self.current_block.grid_coord(sprite.bounding_coord)
+                    texture_cell = self.tetris_maplayer.cells[x][y]
+                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+        elif dir == 'RIGHT':
+            # If block is moved on the sprite grid model, then move it visually
+            if self.current_block.move('RIGHT'):
+                print("Move RIGHT")
+                for sprite in self.current_block.square_sprites:
+                    x, y = self.current_block.grid_coord(sprite.bounding_coord)
+                    texture_cell = self.tetris_maplayer.cells[x][y]
+                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+        elif dir == 'DOWN':
             # TODO 
             # do drop:
             #   - 
@@ -217,20 +260,11 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             #   - remove sprite f.rom spritegrid
             #   - remove sprite from block
             #   - remove sprite visually
-            # make new block
+            # make new block            
             pass
         elif dir == 'UP':
             # TODO rotate
-            pass
-        elif dir == 'RIGHT':
-            # TODO 
-            # Move block right
-            #   - check if any overlap with sprites when bounding square moves
-            #   - if no overlap, shift each sprite right on spritegrid
-            #   - move sprite visually on window
-            pass
-        elif dir == 'LEFT':
-            pass
+            pass            
 
 
 
