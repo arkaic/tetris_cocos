@@ -2,7 +2,7 @@ import cocos, pyglet, sys
 from cocos import layer, scene
 from cocos.sprite import Sprite
 from cocos.director import director
-from cocos.actions import *
+from cocos.actions import Place
 from random import randrange
 from pyglet import window
 
@@ -128,6 +128,8 @@ class Block():
                     return False
                 if (not self._is_a_block_coord((sprite_x - 1, sprite_y)) and 
                     self.sprite_grid[sprite_x - 1][sprite_y] != None):
+                    # if shifted position of square is not in block and there's
+                    # something in that shifted coordinate, can't move block
                     return False
             elif direction == 'RIGHT':
                 if sprite_x >= self.board_layer.width - 1:
@@ -136,7 +138,10 @@ class Block():
                     self.sprite_grid[sprite_x + 1][sprite_y] != None):
                     return False
             elif direction == 'DOWN':
-                if sprite_y <= 0 or not self.sprite_grid[sprite_y - 1] == None:
+                if sprite_y <= 0: 
+                    return False
+                if (not self._is_a_block_coord((sprite_x, sprite_y - 1)) and 
+                    self.sprite_grid[sprite_x][sprite_y - 1] != None):
                     return False
         return True
 
@@ -261,7 +266,13 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             #   - remove sprite from block
             #   - remove sprite visually
             # make new block            
-            pass
+            while self.current_block._can_move('DOWN'):
+                print("Move DOWN")
+                self.current_block.move('DOWN')
+                for sprite in self.current_block.square_sprites:
+                    x, y = self.current_block.grid_coord(sprite.bounding_coord)
+                    texture_cell = self.tetris_maplayer.cells[x][y]
+                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif dir == 'UP':
             # TODO rotate
             pass            
