@@ -164,7 +164,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     width = 10
     height = 22
     is_event_handler = True
-    keys_pressed = set()
+    key_pressed = None
     sprite_grid = None
     current_block = None
     tetris_maplayer = None
@@ -188,10 +188,13 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self._new_block()
 
     def _new_block(self, blockchar=None):
-        # none supplied, current exists => nothing happens
-        # none supplied, no current => get random
-        # supplied, current exists => nothing happens
-        # supplied, no current => use supplied
+        """ Note: This should be called when self.current_block == None
+        All conditions:
+          blockchar=None, current exists => nothing happens
+          blockchar=None, no current => get random
+          blockchar=<char>, current exists => nothing happens
+          blockchar=<char>, no current => use supplied
+        """
         if self.current_block:
             raise ShouldntHappenError("Getting a new block without removing current")
             sys.exit()
@@ -225,23 +228,19 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             self.add(s, z=1)
 
     def on_key_press(self, key, modifiers):
-        if not self.keys_pressed:
-            self.keys_pressed.add(key)
-            keyspressed = [window.key.symbol_string(k) for k in self.keys_pressed]
-            for key in keyspressed:
-                self._move_block(key)
+        # Note: finishes execution when key pressed and only once, even if held
+        if not self.key_pressed:
+            self.key_pressed = window.key.symbol_string(key)
+            self._move_block(self.key_pressed)
             self.schedule_interval(self._button_held, .15)
 
     def on_key_release(self, key, modifiers):
-        self.keys_pressed.discard(key)
-        if len(self.keys_pressed) == 0:
-            self.unschedule(self._button_held)
+        self.key_pressed = None
+        self.unschedule(self._button_held)
 
     def _button_held(self, dt):
-        keyspressed = [window.key.symbol_string(key) for key in self.keys_pressed]
-        if len(keyspressed) > 0:
-            for key in keyspressed:
-                self._move_block(key)
+        if self.key_pressed:
+            self._move_block(self.key_pressed)
 
     def _move_block(self, dir):
         moved = False
@@ -254,8 +253,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif dir == 'RIGHT':
-            # If block is moved on the sprite grid model, then move it visually
             if self.current_block.move('RIGHT'):
+                # After movement in sprite grid model, do it visually
                 moved = True
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite.bounding_coord)
@@ -264,19 +263,24 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif dir == 'DOWN':
             while self.current_block._can_move('DOWN'):
+                # After movement in sprite grid model, do it visually
                 moved = True
                 self.current_block.move('DOWN')
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite.bounding_coord)
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
-            # TODO implement clear line and collapse
+
+            # Create next block
             self.current_block = None
             self._new_block()
+
+            # TODO implement clear line and collapse
+
         elif dir == 'UP':
             # TODO rotate
             pass
-            
+
         if moved:
             print("{} {}".format(dir, self.current_block.char))
 
