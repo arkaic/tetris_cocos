@@ -187,6 +187,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         # Add group of sprites based on current block
         self._new_block()
 
+        # Schedule timed drop of block
+        self.schedule_interval(self._timed_drop, .7)
+
     def _new_block(self, blockchar=None):
         """ Note: This should be called when self.current_block == None
         All conditions:
@@ -241,6 +244,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.key_pressed = None
         self.unschedule(self._button_held)
 
+    def _timed_drop(self, dt):
+        self._move_block('DOWN')
+
     def _button_held(self, dt):
         if self.key_pressed:
             if self.key_pressed == 'DOWN':
@@ -278,20 +284,15 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif dir == 'DROP':
             while self.current_block._can_move('DOWN'):
-                # After movement in sprite grid model, do it visually
                 moved = True
                 self._move_block('DOWN')
-                # self.current_block.move('DOWN')
-                # for sprite in self.current_block.square_sprites:
-                #     x, y = self.current_block.grid_coord(sprite.bounding_coord)
-                #     texture_cell = self.tetris_maplayer.cells[x][y]
-                #     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
 
             # Create next block
             self.current_block = None
             self._new_block()
 
             # TODO implement clear line and collapse
+            pass
         elif dir == 'UP':
             # TODO rotate
             pass
