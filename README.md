@@ -1,10 +1,14 @@
-**Currently in progress:**
-* Need to implement rotation, line clearing, and collapsing.
+**Currently in progress**
+
+**TODOS**
+* implement line clearing and collapsing
 * UI stuff like score, menus, polish
+* Bugs: the schedule function for timer movement is mysteriously being removed sometimes
 
 **What works?**
 * Moving blocks and dropping. 
 * Blocks moving down by timer.
+* Rotation
 
 **How to run**
 
