@@ -85,6 +85,7 @@ class Block():
             self.sprite_grid[sprite_x][sprite_y] = None
 
         if not self._can_rotate(direction):
+            print("can't rotate")
             return False
 
         # Rotate and reassign the bounding coords of the square. Then get the 
@@ -158,6 +159,7 @@ class Block():
         """ Sprite coordinates are made up of the grid location offset by the 
         bounding coords 
         """
+        # TODO refactor lines around for terseness
         for sprite in self.square_sprites:
             sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
             if direction == 'LEFT':
@@ -208,9 +210,14 @@ class Block():
                     rotated_bound_x = -bound_y
                 rotated_bound_y = bound_x
 
-            if direction == 'CLOCKWISE' or direction == 'COUNTERCLOCKWISE':
+            if not self._is_a_block_coord((rotated_bound_x, rotated_bound_y)):
+                # if not part of the block and the direction is correct
                 rotated_sprite_x, rotated_sprite_y = self.grid_coord((rotated_bound_x, rotated_bound_y))
-                if self.sprite_grid[rotated_bound_x][rotated_bound_y] != None:
+                print("{}, {} from {}".format(rotated_sprite_x, rotated_sprite_y, self.gridlocation_coord))
+
+                if rotated_sprite_x < 0 or rotated_sprite_x >= self.board_layer.width:
+                    return False
+                if self.sprite_grid[rotated_sprite_x][rotated_sprite_y] != None:
                     return False
         return True
 
@@ -253,7 +260,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.tetris_maplayer.set_view(0, 0, x, y)
 
         # Add group of sprites based on current block
-        self._new_block()
+        self._new_block('Z')
 
         # Schedule timed drop of block
         self.schedule_interval(self._timed_drop, .7)
@@ -266,6 +273,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
           blockchar=<char>, current exists => nothing happens
           blockchar=<char>, no current => use supplied
         """
+
         if self.current_block:
             raise ShouldntHappenError("Getting a new block without removing current")
             sys.exit()
