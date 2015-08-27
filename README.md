@@ -1,14 +1,15 @@
-Currently in progress:
+**Currently in progress:**
 * Need to implement rotation, line clearing, and collapsing.
 * UI stuff like score, menus, polish
 
-What works?
+**What works?**
 * Moving blocks and dropping. 
 * Blocks moving down by timer.
 
-How to run
-1. Install python3
+**How to run**
 
-2. Install cocos2d for python from http://python.cocos2d.org/download.html
+- Install python3
 
-3. "python3 tetris_game.py"
+- Install cocos2d for python from http://python.cocos2d.org/download.html
+
+- "python3 tetris_game.py"
