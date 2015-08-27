@@ -28,14 +28,6 @@ class Block():
        (TODO or this is a SquareSprite attribute instead)
      * Sprite grid coordinate that the origin point is mapped to.
     """
-    # Notes: Formula for I and O block
-    # newXccw = centerX + centerY - y
-    # newYccw = centerY - centerX + x
-    # newXcw  = centerX - centerY + y
-    # newYcw  = centerX + centerY - x
-    # Formula for rest
-    # ccw =>   x,y => -y, x
-    # cw  =>   x,y =>  y,-x
 
     char = None
     board_layer = None  # cocos parent layer
@@ -73,6 +65,39 @@ class Block():
                 self.gridlocation_coord = (prev_gridloc_x, prev_gridloc_y - 1)
             sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
             self.sprite_grid[sprite_x][sprite_y] = sprite
+        return True
+
+    def rotate(self, direction):
+        """ Formula for I and O block
+        newXccw = centerX + centerY - y
+        newYccw = centerY - centerX + x
+        newXcw  = centerX - centerY + y
+        newYcw  = centerX + centerY - x
+        Formula for rest
+        ccw =>   x,y => -y, x
+        cw  =>   x,y =>  y,-x
+        """
+
+        # Erase
+        for sprite in self.square_sprites:
+            sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
+            self.sprite_grid[sprite_x][sprite_y] = None
+
+        if not self._can_rotate(direction):
+            return False
+
+        prev_gridloc_x, prev_gridloc_y
+        # for sprite in self.square_sprites:
+        #     sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
+        #     if direction == 'CLOCKWISE':
+        #         rotated_sprite_x = sprite_y
+        #         if self.char == 'I' or self.char == 'O'
+        #             rotated_sprite_y = 1 - sprite_x
+        #         else:
+        #             rotated_sprite_y = -1 * sprite_x
+        #         if self.sprite_grid
+        #         pass
+
         return True
 
     def grid_coord(self, bound_coord):
@@ -143,6 +168,37 @@ class Block():
                     return False
                 if (not self._is_a_block_coord((sprite_x, sprite_y - 1)) and 
                     self.sprite_grid[sprite_x][sprite_y - 1] != None):
+                    return False
+        return True
+
+    def _can_rotate(self, direction):
+        """ Formula for I and O block
+        centerX and centerY = 0.5
+        newXccw = centerX + centerY - y = 1 - y
+        newYccw = centerY - centerX + x = x
+        newXcw  = centerX - centerY + y = y
+        newYcw  = centerX + centerY - x = 1 - x
+        Formula for rest
+        ccw =>   x,y => -y, x
+        cw  =>   x,y =>  y,-x
+        """
+        for sprite in self.square_sprites:
+            sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
+            if direction == 'CLOCKWISE':
+                rotated_sprite_x = sprite_y
+                if self.char == 'I' or self.char == 'O':
+                    rotated_sprite_y = 1 - sprite_x
+                else:
+                    rotated_sprite_y = -sprite_x
+            elif direction == 'COUNTERCLOCKWISE':
+                if self.char == 'I' or self.char == 'O':
+                    rotated_sprite_x = 1 - sprite_y
+                else:
+                    rotated_sprite_x = -sprite_y
+                rotated_sprite_y = sprite_x
+
+            if direction == 'CLOCKWISE' OR direction == 'COUNTERCLOCKWISE':
+                if self.sprite_grid[rotated_sprite_x][rotated_sprite_y] != None:
                     return False
         return True
 
