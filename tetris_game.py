@@ -65,6 +65,7 @@ class Block():
                 self.gridlocation_coord = (prev_gridloc_x, prev_gridloc_y - 1)
             sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
             self.sprite_grid[sprite_x][sprite_y] = sprite
+
         return True
 
     def rotate(self, direction):
@@ -86,17 +87,27 @@ class Block():
         if not self._can_rotate(direction):
             return False
 
-        prev_gridloc_x, prev_gridloc_y
-        # for sprite in self.square_sprites:
-        #     sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
-        #     if direction == 'CLOCKWISE':
-        #         rotated_sprite_x = sprite_y
-        #         if self.char == 'I' or self.char == 'O'
-        #             rotated_sprite_y = 1 - sprite_x
-        #         else:
-        #             rotated_sprite_y = -1 * sprite_x
-        #         if self.sprite_grid
-        #         pass
+        # Rotate and reassign the bounding coords of the square. Then get the 
+        # grid coordinates and write the square into the model grid.
+        for sprite in self.square_sprites:
+            bound_x, bound_y = sprite.bounding_coord
+            if direction == 'CLOCKWISE':
+                rotated_bound_x = bound_y
+                if self.char == 'I' or self.char == 'O':
+                    rotated_bound_y = 1 - bound_x
+                else:
+                    rotated_bound_y = -1 * bound_x
+            elif direction == 'COUNTERCLOCKWISE':
+                if self.char == 'I' or self.char == 'O':
+                    rotated_bound_x = 1 - bound_y
+                else:
+                    rotated_bound_x = -bound_y
+                rotated_bound_y = bound_x
+
+            if direction == 'CLOCKWISE' or direction == 'COUNTERCLOCKWISE':
+                sprite.bounding_coord = (rotated_bound_x, rotated_bound_y)
+                sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
+                self.sprite_grid[sprite_x][sprite_y] = sprite
 
         return True
 
@@ -183,22 +194,23 @@ class Block():
         cw  =>   x,y =>  y,-x
         """
         for sprite in self.square_sprites:
-            sprite_x, sprite_y = self.grid_coord(sprite.bounding_coord)
+            bound_x, bound_y = sprite.bounding_coord
             if direction == 'CLOCKWISE':
-                rotated_sprite_x = sprite_y
+                rotated_bound_x = bound_y
                 if self.char == 'I' or self.char == 'O':
-                    rotated_sprite_y = 1 - sprite_x
+                    rotated_bound_y = 1 - bound_x
                 else:
-                    rotated_sprite_y = -sprite_x
+                    rotated_bound_y = -bound_x
             elif direction == 'COUNTERCLOCKWISE':
                 if self.char == 'I' or self.char == 'O':
-                    rotated_sprite_x = 1 - sprite_y
+                    rotated_bound_x = 1 - bound_y
                 else:
-                    rotated_sprite_x = -sprite_y
-                rotated_sprite_y = sprite_x
+                    rotated_bound_x = -bound_y
+                rotated_bound_y = bound_x
 
-            if direction == 'CLOCKWISE' OR direction == 'COUNTERCLOCKWISE':
-                if self.sprite_grid[rotated_sprite_x][rotated_sprite_y] != None:
+            if direction == 'CLOCKWISE' or direction == 'COUNTERCLOCKWISE':
+                rotated_sprite_x, rotated_sprite_y = self.grid_coord((rotated_bound_x, rotated_bound_y))
+                if self.sprite_grid[rotated_bound_x][rotated_bound_y] != None:
                     return False
         return True
 
@@ -330,7 +342,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif dir == 'DOWN':
-            # TODO single move down
             if self.current_block.move('DOWN'):
                 moved = True
                 for sprite in self.current_block.square_sprites:
@@ -350,10 +361,17 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             # TODO implement clear line and collapse
             pass
         elif dir == 'UP':
-            # TODO rotate
-            pass
+            if self.current_block.rotate('CLOCKWISE'):
+                moved = True
+                for sprite in self.current_block.square_sprites:
+                    x, y = self.current_block.grid_coord(sprite.bounding_coord)
+                    print("   {},{}".format(x, y))
+                    texture_cell = self.tetris_maplayer.cells[x][y]
+                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
 
         if moved:
+            if dir == 'UP':
+                dir = 'ROTATE'
             print("{} {}".format(dir, self.current_block.char))
 
 
