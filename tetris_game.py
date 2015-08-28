@@ -238,6 +238,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
     width = 10
     height = 22
+    keydelay_interval = .25
     is_event_handler = True
     key_pressed = None
     sprite_grid = None
@@ -315,7 +316,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self._move_block('DROP')
             else:
                 self._move_block(self.key_pressed)
-            self.schedule_interval(self._button_held, .15)
+            self.schedule_interval(self._button_held, self.keydelay_interval)
 
     def on_key_release(self, key, modifiers):
         self.key_pressed = None
@@ -366,8 +367,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             # Check for and clear lines
             self._clear_lines()
 
-            # TODO collapse
-
             # Create next block
             self.current_block = None
             self._new_block()
@@ -387,23 +386,53 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
     def _clear_lines(self):
         # Get list of y coordinates to clear
-        ys_to_clear = []
+        line_ys_to_clear = []
+        do_lines_exist = False
         for y in range(len(self.sprite_grid[0])):
             for x in range(len(self.sprite_grid)):
                 if self.sprite_grid[x][y] == None:
                     break
                 if x == len(self.sprite_grid) - 1:
-                    ys_to_clear.append(y)
+                    line_ys_to_clear.append(y)
 
-        # Empty lists = nothing happens
-        if not ys_to_clear:
-            return False
+        if line_ys_to_clear:
+            do_lines_exist = True
 
-        # Clear lines
-        for y in ys_to_clear:
-            for x in range(len(self.sprite_grid)):
-                self.sprite_grid[x][y].kill()
-                self.sprite_grid[x][y] = None
+            # Clear lines
+            for y in line_ys_to_clear:
+                for x in range(len(self.sprite_grid)):
+                    self.sprite_grid[x][y].kill()
+                    self.sprite_grid[x][y] = None
+
+            # Remove sprite/block references, then collapse
+            for block in self.existing_blocks:
+                if not block.square_sprites:
+                    self.existing_blocks.remove(block)
+                else:
+                    for sprite in block.square_sprites:
+                        if not sprite.parent:
+                            block.square_sprites.remove(sprite)
+                    if not block.square_sprites:
+                        self.existing_blocks.remove(block)
+
+            # Collapse
+            self._collapse(line_ys_to_clear)
+
+    def _collapse(self, line_ys_to_clear):
+        # for base_y in line_ys_to_clear:
+        #     # Move every row above this y down
+        #     for y in range(base_y + 1, self.height):
+
+        # TODO test idea
+        movable_block_exists = True
+        while movable_block_exists:
+            c = 0
+            for block in self.existing_blocks:
+                self.current_block = block
+                if self._move_block('DOWN'):
+                    c += 1
+            if c == 0:
+                movable_block_exists = False
 
 
 class ShouldntHappenError(UserWarning):
