@@ -244,7 +244,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     current_block = None
     tetris_maplayer = None
     sandbox = None
-    # existing_blocks = []  # maybe i use it maybe i dont
+    existing_blocks = []  # maybe i use it maybe i dont
 
     def __init__(self, xmlpath):
         super(TetrisBoardLayer, self).__init__()
@@ -297,6 +297,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.current_block = Block('T', self, rotated_state)
         else:
             self.current_block = Block(blockchar, self, rotated_state)
+        self.existing_blocks.append(self.current_block)
 
         # # Draw sprites on layer
         for s in self.current_block.square_sprites:
@@ -362,12 +363,14 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 moved = True
                 self._move_block('DOWN')
 
+            # Check for and clear lines
+            self._clear_lines()
+
+            # TODO collapse
+
             # Create next block
             self.current_block = None
             self._new_block()
-
-            # TODO implement clear line and collapse
-            pass
         elif dir == 'UP':
             if self.current_block.rotate('CLOCKWISE'):
                 moved = True
@@ -381,6 +384,26 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             if dir == 'UP':
                 dir = 'ROTATE'
             print("{} {}".format(dir, self.current_block.char))
+
+    def _clear_lines(self):
+        # Get list of y coordinates to clear
+        ys_to_clear = []
+        for y in range(len(self.sprite_grid[0])):
+            for x in range(len(self.sprite_grid)):
+                if self.sprite_grid[x][y] == None:
+                    break
+                if x == len(self.sprite_grid) - 1:
+                    ys_to_clear.append(y)
+
+        # Empty lists = nothing happens
+        if not ys_to_clear:
+            return False
+
+        # Clear lines
+        for y in ys_to_clear:
+            for x in range(len(self.sprite_grid)):
+                self.sprite_grid[x][y].kill()
+                self.sprite_grid[x][y] = None
 
 
 class ShouldntHappenError(UserWarning):
