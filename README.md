@@ -1,9 +1,9 @@
 **Currently in progress**
 
 **TODOS**
-* implement line clearing and collapsing
+* Bug: collapse is not moving everything down
 * UI stuff like score, menus, polish
-* Bugs: the schedule function for timer movement is mysteriously being removed sometimes
+* Bug: the schedule function for timer movement is mysteriously being removed sometimes. Consider scheduling another function for timer movement because of MOVEDOWN entering in
 
 **What works?**
 * Moving blocks and dropping. 
