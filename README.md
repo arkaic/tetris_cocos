@@ -9,6 +9,7 @@
 * Moving blocks and dropping. 
 * Blocks moving down by timer.
 * Rotation
+* Line clearing
 
 **How to run**
 
