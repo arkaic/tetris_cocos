@@ -239,6 +239,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     width = 10
     height = 22
     keydelay_interval = .25
+    start_block_char = 'T'
     is_event_handler = True
     key_pressed = None
     sprite_grid = None
@@ -261,7 +262,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.tetris_maplayer.set_view(0, 0, x, y)
 
         # Add group of sprites based on current block
-        self._new_block('Z')
+        self._new_block(self.start_block_char)
 
         # Schedule timed drop of block
         self.schedule_interval(self._timed_drop, .7)
@@ -384,10 +385,11 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 dir = 'ROTATE'
             print("{} {}".format(dir, self.current_block.char))
 
+        return moved
+
     def _clear_lines(self):
         # Get list of y coordinates to clear
         line_ys_to_clear = []
-        do_lines_exist = False
         for y in range(len(self.sprite_grid[0])):
             for x in range(len(self.sprite_grid)):
                 if self.sprite_grid[x][y] == None:
@@ -395,28 +397,34 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 if x == len(self.sprite_grid) - 1:
                     line_ys_to_clear.append(y)
 
-        if line_ys_to_clear:
-            do_lines_exist = True
+        if not line_ys_to_clear:
+            return False
 
-            # Clear lines
-            for y in line_ys_to_clear:
-                for x in range(len(self.sprite_grid)):
-                    self.sprite_grid[x][y].kill()
-                    self.sprite_grid[x][y] = None
+        # Clear lines
+        # pdb.set_trace()
+        for y in line_ys_to_clear:
+            for x in range(len(self.sprite_grid)):
+                self.remove(self.sprite_grid[x][y])
+                # Lib function remove() doesn't nullify parent?
+                self.sprite_grid[x][y].parent = None
+                self.sprite_grid[x][y] = None
 
-            # Remove sprite/block references, then collapse
-            for block in self.existing_blocks:
+        # Remove sprite/block references, then collapse
+        # pdb.set_trace()
+        for block in self.existing_blocks:
+            if not block.square_sprites:
+                self.existing_blocks.remove(block)
+            else:
+                for sprite in block.square_sprites:
+                    if not sprite.parent:
+                        block.square_sprites.remove(sprite)
                 if not block.square_sprites:
                     self.existing_blocks.remove(block)
-                else:
-                    for sprite in block.square_sprites:
-                        if not sprite.parent:
-                            block.square_sprites.remove(sprite)
-                    if not block.square_sprites:
-                        self.existing_blocks.remove(block)
 
-            # Collapse
-            self._collapse(line_ys_to_clear)
+        # Collapse
+        self._collapse(line_ys_to_clear)
+
+        return True
 
     def _collapse(self, line_ys_to_clear):
         # for base_y in line_ys_to_clear:
@@ -431,8 +439,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.current_block = block
                 if self._move_block('DOWN'):
                     c += 1
+                    print("c++")
             if c == 0:
                 movable_block_exists = False
+                print("didn't exist")
 
 
 class ShouldntHappenError(UserWarning):
