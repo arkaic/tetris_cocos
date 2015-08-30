@@ -314,7 +314,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         # Draw sprites on layer
         for s in self.current_block.square_sprites:
             x, y = self.current_block.grid_coord(s)
-            print("{},{}".format(x, y))
             texture_cell = self.tetris_maplayer.cells[x][y]
             s.position = (texture_cell.x + 9, texture_cell.y + 9)
             self.add(s, z=1)
@@ -373,7 +372,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             self._clear_lines()
             self.current_block = None
             self._new_block()
-            print("Collapsed\n{}".format(self._board_to_string()))
+            # print("Collapsed\n{}".format(self._board_to_string()))
         elif direction == 'UP':
             if self.current_block.rotate('CLOCKWISE'):
                 for sprite in self.current_block.square_sprites:
@@ -406,7 +405,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 # Library function remove() doesn't nullify parent
                 self.sprite_grid[x][y].parent = None
                 self.sprite_grid[x][y] = None
-        print("Cleared lines\n{}".format(self._board_to_string()))
+        # print("Cleared lines\n{}".format(self._board_to_string()))
 
         # Remove cleared sprites from their blocks
         blocks_to_remove = []
