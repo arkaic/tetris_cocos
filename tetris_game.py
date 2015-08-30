@@ -380,19 +380,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
             # Create next block
             self.current_block = None
-
             self._new_block()
 
-            # # TODO remove this conidtional after test
-            # if self.test_blocks:
-            #     self._new_block(self.test_blocks[-1])
-            #     self.test_blocks.pop()
-            # else:
-            #     self._new_block()
-
-            # TODO remove after test
-            # print("Collapsed\n{}".format(self._board_to_string()))
-
+            print("Collapsed\n{}".format(self._board_to_string()))
         elif direction == 'UP':
             if self.current_block.rotate('CLOCKWISE'):
                 moved = True
@@ -421,7 +411,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             return False
 
         # Clear lines
-        # pdb.set_trace()
         for y in line_ys_to_clear:
             for x in range(len(self.sprite_grid)):
                 try:
@@ -430,7 +419,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     print('Sprite is not a child when clearing')
                     print('coord:{}\n'.format(self.sprite_grid[x][y].grid_coord))
                     raise ShouldntHappenError("Shouldn't happen error, closing")
-                # Lib function remove() doesn't nullify parent?
+                # Library function remove() doesn't nullify parent
                 self.sprite_grid[x][y].parent = None
                 self.sprite_grid[x][y] = None
         print("Cleared lines\n{}".format(self._board_to_string()))
@@ -440,7 +429,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         for block in self.existing_blocks:
             if not block.square_sprites:
                 blocks_to_remove.append(block)
-                # self.existing_blocks.remove(block)
             else:
                 sprites_to_remove = []
                 for sprite in block.square_sprites:
@@ -450,7 +438,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     block.square_sprites.remove(sprite)
                 if not block.square_sprites:
                     blocks_to_remove.append(block)
-                    # self.existing_blocks.remove(block)
         for block in blocks_to_remove:
             self.existing_blocks.remove(block)
 
@@ -459,15 +446,16 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         return True
 
     def _collapse(self, line_ys_to_clear):
+        prev_y = None
+        base_y = line_ys_to_clear[0]
         for y in line_ys_to_clear:
+            if prev_y is not None:
+                base_y += (y - prev_y - 1)
+
             for block in self.existing_blocks:
                 for sprite in block.square_sprites:
-                    # Error program if we find an uncleared line
-                    # if sprite.grid_coord[1] == y:
-                    #     raise ShouldntHappenError('Existing square should be cleared')
-
                     # Forget sprites lower than the clear line
-                    if sprite.grid_coord[1] < y:
+                    if sprite.grid_coord[1] < base_y:
                         continue
 
                     # Move sprite down on sprite grid
@@ -483,6 +471,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     texture_cell = self.tetris_maplayer.cells[new_x][new_y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
 
+            prev_y = y
+
     def _board_to_string(self):
         s = ""
         for y in range(len(self.sprite_grid[0])):
@@ -494,25 +484,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     row += '*|'
             s = row + '\n' + s
         return s
-
-
-
-        # movable_block_exists = True
-        # while movable_block_exists:
-            # c = 0
-            # for block in self.existing_blocks:
-            #     for sprite in block.square_sprites:
-                #     x, y = block.grid_coord(sprite.bounding_coord)
-                #     texture_cell = self.tetris_maplayer.cells[x][y]
-                #     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
-
-                # self.current_block = block
-                # if self._move_block('DOWN'):
-                #     c += 1
-                #     print("c++")
-            # if c == 0:
-            #     movable_block_exists = False
-            #     print("didn't exist")
 
 
 class ShouldntHappenError(UserWarning):
