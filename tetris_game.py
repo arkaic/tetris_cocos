@@ -240,7 +240,7 @@ class Block:
         return False
 
 
-class NumberSpriteGroup:
+class DigitSpriteGroup:
     """ Holds a group of smaller square sprites arranged to represent a digit
      *   *
     * *  *
@@ -266,13 +266,13 @@ class NumberSpriteGroup:
         elif digit == 1:
             coords = [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]
         elif digit == 2:
-            coords = [(1, 0), (2, 0), (0, 1), (1, 2), (2, 3), (0, 4), (1, 4)]
+            coords = [(1, 0), (2, 0), (0, 1), (1, 2), (2, 3), (0, 4), (1, 4), (0, 2)]
         elif digit == 3:
             coords = [(0, 0), (1, 0), (2, 1), (1, 2), (2, 3), (0, 4), (1, 4)]
         elif digit == 4:
             coords = [(2, 0), (2, 1), (0, 2), (1, 2), (2, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
         elif digit == 5:
-            coords = [(0, 0), (1, 0), (2, 1), (1, 2), (0, 3), (1, 4), (2, 4)]
+            coords = [(0, 0), (1, 0), (2, 1), (1, 2), (0, 3), (1, 4), (2, 4), (0, 2)]
         elif digit == 6:
             coords = [(1, 0), (0, 1), (2, 1), (0, 2), (1, 2), (0, 3), (1, 4), (2, 4)]
         elif digit == 7:
@@ -305,7 +305,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     atoms = None  # Palette for graphically representing numeral score
     score = None
     existing_blocks = []
-    number_sprites = []
+    digit_sprite_sets = []
     # test_blocks = ['T', 'I']
 
     def __init__(self, xmlpath):
@@ -325,19 +325,33 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         # Add group of sprites based on current block
         self._new_block(self.start_block_char)
 
-        # TODO Set up scoreboard
-        for x in range(10):
-            self.number_sprites.append(NumberSpriteGroup(x, r['atoms']))
+        # Set up scoreboard
+        for x in range(3):
+            digits = []
+            for y in range(10):
+                digits.append(DigitSpriteGroup(y, r['atoms']))
+            self.digit_sprite_sets.append(digits)
+
+        self._display_score()
 
         # Schedule timed drop of block
-        self.schedule_interval(self._timed_drop, .7)
+        self.schedule_interval(self._timed_drop, .4)
 
-        # todo test
-        atoms = r['atoms']
-        for x in range(12):
-            sprite = SquareSprite(atoms.cells[0][x].tile.image, coord=None)
-            texture_cell = self.tetris_maplayer.cells[9][2]
-            sprite.position = (texture_cell.x + 200, texture_cell.y + (50 + x * 13))
+    def _display_score(self):
+        """ Erase previous three digits and display new ones
+        """
+        # px = (180, 200) at cell 9,10 in board
+        for sprite in self.digit_sprite_sets[0][5].sprites:
+            x, y = sprite.bounding_coord
+            sprite.position = (250 + x * 9, 200 + y * 9)
+            self.add(sprite, z=1)
+        for sprite in self.digit_sprite_sets[0][5].sprites:
+            x, y = sprite.bounding_coord
+            sprite.position = (280 + x * 9, 200 + y * 9)
+            self.add(sprite, z=1)
+        for sprite in self.digit_sprite_sets[0][5].sprites:
+            x, y = sprite.bounding_coord
+            sprite.position = (310 + x * 9, 200 + y * 9)
             self.add(sprite, z=1)
 
     def _new_block(self, blockchar=None):
