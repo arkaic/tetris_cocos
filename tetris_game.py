@@ -1,4 +1,4 @@
-import cocos, pyglet, sys, pdb
+import cocos
 from cocos import layer, scene
 from cocos.sprite import Sprite
 from cocos.director import director
@@ -12,10 +12,10 @@ class SquareSprite(Sprite):
     grid_coord = None
 
     def __init__(self, image, coord, position=(0, 0), rotation=0, scale=1,
-                opacity=255, color=(255, 255, 255), anchor=None):
-        super(SquareSprite, self).__init__(image, position=position,
-                rotation=rotation, scale=scale, opacity=opacity, color=color,
-                anchor=anchor)
+                 opacity=255, color=(255, 255, 255), anchor=None):
+        super(SquareSprite, self).__init__(image, position=position, rotation=rotation,
+                                           scale=scale, opacity=opacity, color=color,
+                                           anchor=anchor)
 
         self.bounding_coord = coord
 
@@ -23,7 +23,7 @@ class SquareSprite(Sprite):
         self.grid_coord = coord
 
 
-class Block():
+class Block:
     """ References all SquareSprites and their location on the model 2D array.
     Sprites will exist inside an abstract bounding square that this class defines.
 
@@ -50,31 +50,31 @@ class Block():
         if self.char == 'I':
             self._gridlocation_coord = (4, 19)
             img = self.board_layer.sandbox.cells[0][0].tile.image
-            init_bounding_coords = [(-1,1), (0,1), (1,1), (2,1)]
+            init_bounding_coords = [(-1, 1), (0, 1), (1, 1), (2, 1)]
         elif self.char == 'J':
             self._gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][1].tile.image
-            init_bounding_coords = [(-1,1), (-1,0), (0,0), (1,0)]
+            init_bounding_coords = [(-1, 1), (-1, 0), (0, 0), (1, 0)]
         elif self.char == 'L':
             self._gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][2].tile.image
-            init_bounding_coords = [(-1,0), (0,0), (1,0), (1,1)]
+            init_bounding_coords = [(-1, 0), (0, 0), (1, 0), (1, 1)]
         elif self.char == 'O':
             self._gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][3].tile.image
-            init_bounding_coords = [(0,1), (0,0), (1,1), (1,0)]
+            init_bounding_coords = [(0, 1), (0, 0), (1, 1), (1, 0)]
         elif self.char == 'S':
             self._gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][4].tile.image
-            init_bounding_coords = [(-1,0), (0,0), (0,1), (1,1)]
+            init_bounding_coords = [(-1, 0), (0, 0), (0, 1), (1, 1)]
         elif self.char == 'T':
             self._gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][6].tile.image
-            init_bounding_coords = [(-1,0), (0,1), (0,0), (1,0)]
+            init_bounding_coords = [(-1, 0), (0, 1), (0, 0), (1, 0)]
         elif self.char == 'Z':
             self._gridlocation_coord = (4, 20)
             img = self.board_layer.sandbox.cells[0][5].tile.image
-            init_bounding_coords = [(-1,1), (0,1), (0,0), (1,0)]
+            init_bounding_coords = [(-1, 1), (0, 1), (0, 0), (1, 0)]
 
         # Add sprites to both the member list and the grid model
         for bounding_coord in init_bounding_coords:
@@ -121,7 +121,7 @@ class Block():
                 if sprite_x <= 0:
                     return False
                 if (not self._is_a_block_coord((sprite_x - 1, sprite_y)) and
-                    self.sprite_grid[sprite_x - 1][sprite_y] is not None):
+                        self.sprite_grid[sprite_x - 1][sprite_y] is not None):
                     # if shifted position of square is not in block and there's
                     # something in that shifted coordinate, can't move block
                     return False
@@ -129,13 +129,13 @@ class Block():
                 if sprite_x >= self.board_layer.width - 1:
                     return False
                 if (not self._is_a_block_coord((sprite_x + 1, sprite_y)) and
-                    self.sprite_grid[sprite_x + 1][sprite_y] is not None):
+                        self.sprite_grid[sprite_x + 1][sprite_y] is not None):
                     return False
             elif direction == 'DOWN':
                 if sprite_y <= 0:
                     return False
                 if (not self._is_a_block_coord((sprite_x, sprite_y - 1)) and
-                    self.sprite_grid[sprite_x][sprite_y - 1] is not None):
+                        self.sprite_grid[sprite_x][sprite_y - 1] is not None):
                     return False
         return True
 
@@ -164,6 +164,7 @@ class Block():
         # grid coordinates and write the square into the model grid.
         for sprite in self.square_sprites:
             bound_x, bound_y = sprite.bounding_coord
+            rotated_bound_x, rotated_bound_y = None, None
             if direction == 'CLOCKWISE':
                 rotated_bound_x = bound_y
                 if self.char == 'I' or self.char == 'O':
@@ -265,13 +266,13 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         super(TetrisBoardLayer, self).__init__()
 
         self.sprite_grid = [[None for y in range(self.height)] for x in range(self.width)]
-        r = cocos.tiles.load(xmlpath)  #['map0'] # TODO hardcoded
-        self.tetris_maplayer = r['map0']
+        r = cocos.tiles.load(xmlpath)
+        self.tetris_maplayer = r['map0']  # TODO 'map0' is hardcoded
         self.add(self.tetris_maplayer)
         self.sandbox = r['sandbox']  # Used as the palette
 
         # Set size and show the grid
-        x,y = cocos.director.director.get_window_size()
+        x, y = cocos.director.director.get_window_size()
         self.tetris_maplayer.set_view(0, 0, x, y)
 
         # Add group of sprites based on current block
@@ -291,10 +292,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         if self.current_block:
             raise ShouldntHappenError("Getting a new block without removing current")
-            sys.exit()
 
         rotated_state = 0  # Change to rng if needed to randomize
-        if blockchar == None:
+        if blockchar is None:
             r = randrange(0, 7)
             if r == 0:
                 self.current_block = Block('L', self, rotated_state)
@@ -314,10 +314,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             self.current_block = Block(blockchar, self, rotated_state)
         self.existing_blocks.append(self.current_block)
 
-        # # Draw sprites on layer
+        # Draw sprites on layer
         for s in self.current_block.square_sprites:
             x, y = self.current_block.grid_coord(s)
-            print("{},{}".format(x,y))
+            print("{},{}".format(x, y))
             texture_cell = self.tetris_maplayer.cells[x][y]
             s.position = (texture_cell.x + 9, texture_cell.y + 9)
             self.add(s, z=1)
