@@ -1,6 +1,7 @@
 **Currently in progress**
 
 **TODOS**
+* lose condition
 * UI
   * Score
   * Next block
