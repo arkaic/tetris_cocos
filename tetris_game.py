@@ -259,6 +259,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     tetris_maplayer = None
     sandbox = None
     existing_blocks = []  # maybe i use it maybe i dont
+    test_blocks = ['T', 'I']
 
     def __init__(self, xmlpath):
         super(TetrisBoardLayer, self).__init__()
@@ -379,10 +380,18 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
             # Create next block
             self.current_block = None
+
             self._new_block()
 
+            # # TODO remove this conidtional after test
+            # if self.test_blocks:
+            #     self._new_block(self.test_blocks[-1])
+            #     self.test_blocks.pop()
+            # else:
+            #     self._new_block()
+
             # TODO remove after test
-            print(self._board_to_string())
+            # print("Collapsed\n{}".format(self._board_to_string()))
 
         elif direction == 'UP':
             if self.current_block.rotate('CLOCKWISE'):
@@ -424,20 +433,26 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 # Lib function remove() doesn't nullify parent?
                 self.sprite_grid[x][y].parent = None
                 self.sprite_grid[x][y] = None
+        print("Cleared lines\n{}".format(self._board_to_string()))
 
         # Remove cleared sprites from their blocks
+        blocks_to_remove = []
         for block in self.existing_blocks:
             if not block.square_sprites:
-                self.existing_blocks.remove(block)
+                blocks_to_remove.append(block)
+                # self.existing_blocks.remove(block)
             else:
-                l = []
+                sprites_to_remove = []
                 for sprite in block.square_sprites:
                     if not sprite.parent:
-                        l.append(sprite)
-                for sprite in l:
+                        sprites_to_remove.append(sprite)
+                for sprite in sprites_to_remove:
                     block.square_sprites.remove(sprite)
                 if not block.square_sprites:
-                    self.existing_blocks.remove(block)
+                    blocks_to_remove.append(block)
+                    # self.existing_blocks.remove(block)
+        for block in blocks_to_remove:
+            self.existing_blocks.remove(block)
 
         self._collapse(line_ys_to_clear)
 
