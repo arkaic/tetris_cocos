@@ -16,7 +16,6 @@ class SquareSprite(Sprite):
         super(SquareSprite, self).__init__(image, position=position, rotation=rotation,
                                            scale=scale, opacity=opacity, color=color,
                                            anchor=anchor)
-
         self.bounding_coord = coord
 
     def set_grid_coord(self, coord):
@@ -241,6 +240,53 @@ class Block:
         return False
 
 
+class NumberSpriteGroup:
+    """ Holds a group of smaller square sprites arranged to represent a digit
+     *   *
+    * *  *
+    * *  *
+    * *  *
+     *   *
+    """
+    digit = None
+    sprites = None
+    atoms = None
+
+    def __init__(self, digit, atoms):
+        if digit < 0 or digit > 9:
+            raise ShouldntHappenError("Digit is wrong")
+
+        self.digit = digit
+        self.sprites = []
+        self.atoms = atoms
+
+        coords = []
+        if digit == 0:
+            coords = [(1, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (1, 4)]
+        elif digit == 1:
+            coords = [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]
+        elif digit == 2:
+            coords = [(1, 0), (2, 0), (0, 1), (1, 2), (2, 3), (0, 4), (1, 4)]
+        elif digit == 3:
+            coords = [(0, 0), (1, 0), (2, 1), (1, 2), (2, 3), (0, 4), (1, 4)]
+        elif digit == 4:
+            coords = [(2, 0), (2, 1), (0, 2), (1, 2), (2, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
+        elif digit == 5:
+            coords = [(0, 0), (1, 0), (2, 1), (1, 2), (0, 3), (1, 4), (2, 4)]
+        elif digit == 6:
+            coords = [(1, 0), (0, 1), (2, 1), (0, 2), (1, 2), (0, 3), (1, 4), (2, 4)]
+        elif digit == 7:
+            coords = [(0, 0), (0, 1), (1, 2), (2, 3), (0, 4), (1, 4), (2, 4)]
+        elif digit == 8:
+            coords = [(1, 0), (0, 1), (2, 1), (1, 2), (0, 3), (2, 3), (1, 4)]
+        elif digit == 9:
+            coords = [(0, 0), (1, 0), (2, 1), (1, 2), (2, 2), (0, 3), (2, 3), (1, 4)]
+
+        img = self.atoms.cells[0][digit].tile.image
+        for coord in coords:
+            self.sprites.append(SquareSprite(img, coord))
+
+
 class TetrisBoardLayer(layer.ScrollableLayer):
     """ Also keeps track of SquareSprites in a 2D array because the rectmap.cells
     array only tracks the background texture.
@@ -255,8 +301,11 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     sprite_grid = None
     current_block = None
     tetris_maplayer = None
-    sandbox = None
+    sandbox = None   # Palette for block creation
+    atoms = None  # Palette for graphically representing numeral score
+    score = None
     existing_blocks = []
+    number_sprites = []
     # test_blocks = ['T', 'I']
 
     def __init__(self, xmlpath):
@@ -267,6 +316,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.tetris_maplayer = r['map0']  # TODO 'map0' is hardcoded
         self.add(self.tetris_maplayer)
         self.sandbox = r['sandbox']  # Used as the palette
+        self.score = 0
 
         # Set size and show the grid
         x, y = cocos.director.director.get_window_size()
@@ -275,8 +325,20 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         # Add group of sprites based on current block
         self._new_block(self.start_block_char)
 
+        # TODO Set up scoreboard
+        for x in range(10):
+            self.number_sprites.append(NumberSpriteGroup(x, r['atoms']))
+
         # Schedule timed drop of block
         self.schedule_interval(self._timed_drop, .7)
+
+        # todo test
+        atoms = r['atoms']
+        for x in range(12):
+            sprite = SquareSprite(atoms.cells[0][x].tile.image, coord=None)
+            texture_cell = self.tetris_maplayer.cells[9][2]
+            sprite.position = (texture_cell.x + 200, texture_cell.y + (50 + x * 13))
+            self.add(sprite, z=1)
 
     def _new_block(self, blockchar=None):
         """ Note: This should be called when self.current_block == None
@@ -485,4 +547,8 @@ if __name__ == '__main__':
     scroller = layer.ScrollingManager()
     scroller.set_focus(100, 200)
     scroller.add(tetris_board)
+
+    s = layer.ScrollableLayer()
+    scroller.add(s)
+
     director.run(scene.Scene(scroller))
