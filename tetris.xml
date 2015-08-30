@@ -13,6 +13,20 @@
     <image offset="250,217" id="i-o_deeppink"></image>
     <image offset="277,217" id="i-o_white"></image>
   </imageatlas>
+  <imageatlas file="spritesheet.png" id="atlas" size="9x9">
+    <image offset="7, 253" id="small_basewhite_offset"></image>
+    <image offset="26, 253" id="small_red_offset"></image>
+    <image offset="45, 253" id="small_orange_offset"></image>
+    <image offset="64, 253" id="small_yellow_offset"></image>
+    <image offset="83, 253" id="small_lightgreen_offset"></image>
+    <image offset="102, 253" id="small_green_offset"></image>
+    <image offset="121, 253" id="small_lightblue_offset"></image>
+    <image offset="140, 253" id="small_blue_offset"></image>
+    <image offset="159, 253" id="small_purple_offset"></image>
+    <image offset="178, 253" id="small_pink_offset"></image>
+    <image offset="197, 253" id="small_deeppink_offset"></image>
+    <image offset="216, 253" id="small_white_offset"></image>
+  </imageatlas>
 
   <tileset>
     <tile id="o_red"><image ref="i-o_red"/></tile>
@@ -26,7 +40,37 @@
     <tile id="o_pink"><image ref="i-o_pink"/></tile>
     <tile id="o_deeppink"><image ref="i-o_deeppink"/></tile>
     <tile id="o_white"><image ref="i-o_white"/></tile>
+
+    <tile id="small_basewhite"><image ref="small_basewhite_offset"/></tile>
+    <tile id="small_red"><image ref="small_red_offset"/></tile>
+    <tile id="small_orange"><image ref="small_orange_offset"/></tile>
+    <tile id="small_yellow"><image ref="small_yellow_offset"/></tile>
+    <tile id="small_lightgreen"><image ref="small_lightgreen_offset"/></tile>
+    <tile id="small_green"><image ref="small_green_offset"/></tile>
+    <tile id="small_lightblue"><image ref="small_lightblue_offset"/></tile>
+    <tile id="small_blue"><image ref="small_blue_offset"/></tile>
+    <tile id="small_purple"><image ref="small_purple_offset"/></tile>
+    <tile id="small_pink"><image ref="small_pink_offset"/></tile>
+    <tile id="small_deeppink"><image ref="small_deeppink_offset"/></tile>
+    <tile id="small_white"><image ref="small_white_offset"/></tile>
   </tileset>
+
+  <rectmap id="atoms" tile_size="20x20">
+    <column num="0">
+      <cell tile="small_basewhite" />
+      <cell tile="small_red" />
+      <cell tile="small_orange" />
+      <cell tile="small_yellow" />
+      <cell tile="small_lightgreen" />
+      <cell tile="small_green" />
+      <cell tile="small_lightblue" />
+      <cell tile="small_blue" />
+      <cell tile="small_purple" />
+      <cell tile="small_pink" />
+      <cell tile="small_deeppink" />
+      <cell tile="small_white" />
+    </column>
+  </rectmap>
 
   <rectmap id="sandbox" tile_size="20x20" origin="10,10,10">
     <column num="0">
