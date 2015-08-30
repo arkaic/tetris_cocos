@@ -441,22 +441,48 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         return True
 
     def _collapse(self, line_ys_to_clear):
-        movable_block_exists = True
-        while movable_block_exists:
-            c = 0
+        for y in line_ys_to_clear:
             for block in self.existing_blocks:
-                # for sprite in block.square_sprites:
+                for sprite in block.square_sprites:
+                    # Error program if we find an uncleared line
+                    # if sprite.grid_coord[1] == y:
+                    #     raise ShouldntHappenError('Existing square should be cleared')
+
+                    # Forget sprites lower than the clear line
+                    if sprite.grid_coord[1] < y:
+                        continue
+
+                    # Move sprite down on sprite grid
+                    grid_x, grid_y = (sprite.grid_coord[0], sprite.grid_coord[1])
+                    new_x, new_y = (grid_x, grid_y - 1)
+                    if self.sprite_grid[grid_x][grid_y] is sprite:
+                        # sprite => erase, none => do nothing, something else => nothing
+                        self.sprite_grid[grid_x][grid_y] = None
+                    self.sprite_grid[new_x][new_y] = sprite
+                    sprite.grid_coord = (new_x, new_y)
+
+                    # Draw sprite
+                    texture_cell = self.tetris_maplayer.cells[new_x][new_y]
+                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+
+
+
+        # movable_block_exists = True
+        # while movable_block_exists:
+            # c = 0
+            # for block in self.existing_blocks:
+            #     for sprite in block.square_sprites:
                 #     x, y = block.grid_coord(sprite.bounding_coord)
                 #     texture_cell = self.tetris_maplayer.cells[x][y]
                 #     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
 
-                self.current_block = block
-                if self._move_block('DOWN'):
-                    c += 1
-                    print("c++")
-            if c == 0:
-                movable_block_exists = False
-                print("didn't exist")
+                # self.current_block = block
+                # if self._move_block('DOWN'):
+                #     c += 1
+                #     print("c++")
+            # if c == 0:
+            #     movable_block_exists = False
+            #     print("didn't exist")
 
 
 class ShouldntHappenError(UserWarning):
