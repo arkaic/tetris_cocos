@@ -347,10 +347,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self._move_block(self.key_pressed)
 
     def _move_block(self, direction):
-        moved = False
         if direction == 'LEFT':
             if self.current_block.move('LEFT'):
-                moved = True
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite)
                     texture_cell = self.tetris_maplayer.cells[x][y]
@@ -358,21 +356,18 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         elif direction == 'RIGHT':
             if self.current_block.move('RIGHT'):
                 # After movement in sprite grid model, do it visually
-                moved = True
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite)
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'DOWN':
             if self.current_block.move('DOWN'):
-                moved = True
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite)
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'DROP':
             while self.current_block.can_move('DOWN'):
-                moved = True
                 self._move_block('DOWN')
 
             # Check for and clear lines
@@ -385,17 +380,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             print("Collapsed\n{}".format(self._board_to_string()))
         elif direction == 'UP':
             if self.current_block.rotate('CLOCKWISE'):
-                moved = True
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite)
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
-
-        if moved:
-            if direction == 'UP':
-                direction = 'ROTATE'
-
-        return moved
 
     def _clear_lines(self):
         # Get list of y coordinates to clear
@@ -446,8 +434,12 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         return True
 
     def _collapse(self, line_ys_to_clear):
+        """ Shifts every block square above the row lines (line_ys)
+        Keeps track of a base row that determines which squares to shift down
+        """
         prev_y = None
         base_y = line_ys_to_clear[0]
+
         for y in line_ys_to_clear:
             if prev_y is not None:
                 base_y += (y - prev_y - 1)
