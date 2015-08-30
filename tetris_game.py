@@ -10,10 +10,10 @@ from pyglet import window
 class SquareSprite(Sprite):
     bounding_coord = None
     grid_coord = None
-    
+
     def __init__(self, image, coord, position=(0, 0), rotation=0, scale=1,
                 opacity=255, color=(255, 255, 255), anchor=None):
-        super(SquareSprite, self).__init__(image, position=position, 
+        super(SquareSprite, self).__init__(image, position=position,
                 rotation=rotation, scale=scale, opacity=opacity, color=color,
                 anchor=anchor)
 
@@ -98,7 +98,7 @@ class Block():
         # Put sprites into new locations by changing the grid location coord and 
         # offsetting every sprite by it again.
         prev_gridloc_x, prev_gridloc_y = self._gridlocation_coord
-        for sprite in self.square_sprites:            
+        for sprite in self.square_sprites:
             if direction == 'LEFT':
                 self._gridlocation_coord = (prev_gridloc_x - 1, prev_gridloc_y)
             elif direction == 'RIGHT':
@@ -150,17 +150,17 @@ class Block():
         cw  =>   x,y =>  y,-x
         """
 
+        if not self._can_rotate(direction):
+            print("can't rotate")
+            return False
+
         # Erase
         for sprite in self.square_sprites:
             sprite_x, sprite_y = self.grid_coord(sprite)
             sprite.grid_coord = None
             self.sprite_grid[sprite_x][sprite_y] = None
 
-        if not self._can_rotate(direction):
-            print("can't rotate")
-            return False
-
-        # Rotate and reassign the bounding coords of the square. Then get the 
+        # Rotate and reassign the bounding coords of the square. Then get the
         # grid coordinates and write the square into the model grid.
         for sprite in self.square_sprites:
             bound_x, bound_y = sprite.bounding_coord
@@ -229,7 +229,8 @@ class Block():
 
                 if rotated_sprite_x < 0 or rotated_sprite_x >= self.board_layer.width:
                     return False
-                if self.sprite_grid[rotated_sprite_x][rotated_sprite_y] != None:
+                if (self.sprite_grid[rotated_sprite_x][rotated_sprite_y] is not None and
+                        self.sprite_grid[rotated_sprite_x][rotated_sprite_y] not in self.square_sprites):
                     return False
         return True
 
@@ -238,7 +239,7 @@ class Block():
             if grid_coord == self.grid_coord(square):
                 return True
         return False
-            
+
 
 
 class TetrisBoardLayer(layer.ScrollableLayer):
