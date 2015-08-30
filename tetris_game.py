@@ -241,13 +241,10 @@ class Block:
         return False
 
 
-
 class TetrisBoardLayer(layer.ScrollableLayer):
     """ Also keeps track of SquareSprites in a 2D array because the rectmap.cells
     array only tracks the background texture.
     """
-    # Notes: When clearing a line and going sprite by sprite, remove from model
-    # array and then also remove the sprite from the BoardLayer
 
     width = 10
     height = 22
@@ -259,8 +256,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     current_block = None
     tetris_maplayer = None
     sandbox = None
-    existing_blocks = []  # maybe i use it maybe i dont
-    test_blocks = ['T', 'I']
+    existing_blocks = []
+    # test_blocks = ['T', 'I']
 
     def __init__(self, xmlpath):
         super(TetrisBoardLayer, self).__init__()
@@ -337,7 +334,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.unschedule(self._button_held)
 
     def _timed_drop(self, dt):
-        self._move_block('DOWN')
+        if self.current_block.can_move('DOWN'):
+            self._move_block('DOWN')
+        else:
+            self._move_block('DROP')
 
     def _button_held(self, dt):
         if self.key_pressed:
@@ -370,13 +370,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             while self.current_block.can_move('DOWN'):
                 self._move_block('DOWN')
 
-            # Check for and clear lines
             self._clear_lines()
-
-            # Create next block
             self.current_block = None
             self._new_block()
-
             print("Collapsed\n{}".format(self._board_to_string()))
         elif direction == 'UP':
             if self.current_block.rotate('CLOCKWISE'):
@@ -480,6 +476,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
 class ShouldntHappenError(UserWarning):
     pass
+
 
 ################################################################################
 
