@@ -225,7 +225,6 @@ class Block():
             if not self._is_a_block_coord((rotated_bound_x, rotated_bound_y)):
                 # if not part of the block and the direction is correct
                 rotated_sprite_x, rotated_sprite_y = self.bound_to_grid_coord((rotated_bound_x, rotated_bound_y))
-                print("{}, {} from {}".format(rotated_sprite_x, rotated_sprite_y, self._gridlocation_coord))
 
                 if rotated_sprite_x < 0 or rotated_sprite_x >= self.board_layer.width:
                     return False
@@ -353,7 +352,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 moved = True
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite)
-                    print("   {},{}".format(x,y))
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'RIGHT':
@@ -362,7 +360,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 moved = True
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite)
-                    print("   {},{}".format(x,y))
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'DOWN':
@@ -370,7 +367,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 moved = True
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite)
-                    print("   {},{}".format(x,y))
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'DROP':
@@ -384,19 +380,21 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             # Create next block
             self.current_block = None
             self._new_block()
+
+            # TODO remove after test
+            print(self._board_to_string())
+
         elif direction == 'UP':
             if self.current_block.rotate('CLOCKWISE'):
                 moved = True
                 for sprite in self.current_block.square_sprites:
                     x, y = self.current_block.grid_coord(sprite)
-                    print("   {},{}".format(x, y))
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
 
         if moved:
             if direction == 'UP':
                 direction = 'ROTATE'
-            print("{} {}".format(direction, self.current_block.char))
 
         return moved
 
@@ -417,7 +415,12 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         # pdb.set_trace()
         for y in line_ys_to_clear:
             for x in range(len(self.sprite_grid)):
-                self.remove(self.sprite_grid[x][y])
+                try:
+                    self.remove(self.sprite_grid[x][y])
+                except Exception:
+                    print('Sprite is not a child when clearing')
+                    print('coord:{}\n'.format(self.sprite_grid[x][y].grid_coord))
+                    raise ShouldntHappenError("Shouldn't happen error, closing")
                 # Lib function remove() doesn't nullify parent?
                 self.sprite_grid[x][y].parent = None
                 self.sprite_grid[x][y] = None
@@ -464,6 +467,18 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     # Draw sprite
                     texture_cell = self.tetris_maplayer.cells[new_x][new_y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+
+    def _board_to_string(self):
+        s = ""
+        for y in range(len(self.sprite_grid[0])):
+            row = '|'
+            for x in range(len(self.sprite_grid)):
+                if self.sprite_grid[x][y] is None:
+                    row += ' |'
+                else:
+                    row += '*|'
+            s = row + '\n' + s
+        return s
 
 
 
