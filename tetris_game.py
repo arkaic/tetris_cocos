@@ -306,6 +306,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     score = None
     existing_blocks = []
     digit_sprite_sets = []
+    chosen_digits = []
     # test_blocks = ['T', 'I']
 
     def __init__(self, xmlpath):
@@ -340,19 +341,31 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     def _display_score(self):
         """ Erase previous three digits and display new ones
         """
-        # px = (180, 200) at cell 9,10 in board
-        for sprite in self.digit_sprite_sets[0][5].sprites:
-            x, y = sprite.bounding_coord
-            sprite.position = (250 + x * 9, 200 + y * 9)
-            self.add(sprite, z=1)
-        for sprite in self.digit_sprite_sets[0][5].sprites:
-            x, y = sprite.bounding_coord
-            sprite.position = (280 + x * 9, 200 + y * 9)
-            self.add(sprite, z=1)
-        for sprite in self.digit_sprite_sets[0][5].sprites:
-            x, y = sprite.bounding_coord
-            sprite.position = (310 + x * 9, 200 + y * 9)
-            self.add(sprite, z=1)
+
+        # Erase
+        for digit in self.chosen_digits:
+            for sprite in digit.sprites:
+                self.remove(sprite)
+        self.chosen_digits = []
+
+        # Format score for 3 digit manipulation
+        strscore = str(self.score)
+        if len(strscore) < 3:
+            if len(strscore) == 2:
+                strscore = '0' + strscore
+            elif len(strscore) == 1:
+                strscore = '00' + strscore
+
+        # Display three digits
+        offsetpx_x, offsetpx_y = 250, 200
+        for i in range(3):
+            digit_int = int(strscore[i])
+            digit = self.digit_sprite_sets[i][digit_int]
+            for sprite in digit.sprites:
+                x, y = sprite.bounding_coord
+                sprite.position = (offsetpx_x + x * 9, offsetpx_y + y * 9)
+                self.add(sprite, z=1)
+            offsetpx_x += 40
 
     def _new_block(self, blockchar=None):
         """ Note: This should be called when self.current_block == None
@@ -445,7 +458,13 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             while self.current_block.can_move('DOWN'):
                 self._move_block('DOWN')
 
-            self._clear_lines()
+            # Clear any existing lines and record the number of lines
+            numlines = self._clear_lines()
+
+            # Increment and display score
+            self.score += numlines
+            self._display_score()
+
             self.current_block = None
             self._new_block()
             # print("Collapsed\n{}".format(self._board_to_string()))
@@ -467,7 +486,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     line_ys_to_clear.append(y)
 
         if not line_ys_to_clear:
-            return False
+            return 0
 
         # Clear lines
         for y in line_ys_to_clear:
@@ -502,7 +521,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         self._collapse(line_ys_to_clear)
 
-        return True
+        return len(line_ys_to_clear)
 
     def _collapse(self, line_ys_to_clear):
         """ Shifts every block square above the row lines (line_ys)
