@@ -45,7 +45,7 @@ class Block():
     def move(self, direction):
         """ Move sprite on sprite grid (and visually too?)
         """
-        if not self._can_move(direction):
+        if not self.can_move(direction):
             return False
 
         # Erase from sprite grid
@@ -155,7 +155,7 @@ class Block():
             sprite_x, sprite_y = self.grid_coord(bounding_coord)
             self.sprite_grid[sprite_x][sprite_y] = sprite
 
-    def _can_move(self, direction):
+    def can_move(self, direction):
         """ Sprite coordinates are made up of the grid location offset by the 
         bounding coords 
         """
@@ -333,9 +333,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             else:
                 self._move_block(self.key_pressed)
 
-    def _move_block(self, dir):
+    def _move_block(self, direction):
         moved = False
-        if dir == 'LEFT':
+        if direction == 'LEFT':
             if self.current_block.move('LEFT'):
                 moved = True
                 for sprite in self.current_block.square_sprites:
@@ -343,7 +343,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     print("   {},{}".format(x,y))
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
-        elif dir == 'RIGHT':
+        elif direction == 'RIGHT':
             if self.current_block.move('RIGHT'):
                 # After movement in sprite grid model, do it visually
                 moved = True
@@ -352,7 +352,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     print("   {},{}".format(x,y))
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
-        elif dir == 'DOWN':
+        elif direction == 'DOWN':
             if self.current_block.move('DOWN'):
                 moved = True
                 for sprite in self.current_block.square_sprites:
@@ -360,8 +360,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     print("   {},{}".format(x,y))
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
-        elif dir == 'DROP':
-            while self.current_block._can_move('DOWN'):
+        elif direction == 'DROP':
+            while self.current_block.can_move('DOWN'):
                 moved = True
                 self._move_block('DOWN')
 
@@ -371,7 +371,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             # Create next block
             self.current_block = None
             self._new_block()
-        elif dir == 'UP':
+        elif direction == 'UP':
             if self.current_block.rotate('CLOCKWISE'):
                 moved = True
                 for sprite in self.current_block.square_sprites:
@@ -381,9 +381,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
 
         if moved:
-            if dir == 'UP':
-                dir = 'ROTATE'
-            print("{} {}".format(dir, self.current_block.char))
+            if direction == 'UP':
+                direction = 'ROTATE'
+            print("{} {}".format(direction, self.current_block.char))
 
         return moved
 
@@ -392,7 +392,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         line_ys_to_clear = []
         for y in range(len(self.sprite_grid[0])):
             for x in range(len(self.sprite_grid)):
-                if self.sprite_grid[x][y] == None:
+                if self.sprite_grid[x][y] is None:
                     break
                 if x == len(self.sprite_grid) - 1:
                     line_ys_to_clear.append(y)
@@ -409,33 +409,34 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.sprite_grid[x][y].parent = None
                 self.sprite_grid[x][y] = None
 
-        # Remove sprite/block references, then collapse
-        # pdb.set_trace()
+        # Remove cleared sprites from their blocks
         for block in self.existing_blocks:
             if not block.square_sprites:
                 self.existing_blocks.remove(block)
             else:
+                l = []
                 for sprite in block.square_sprites:
                     if not sprite.parent:
-                        block.square_sprites.remove(sprite)
+                        l.append(sprite)
+                for sprite in l:
+                    block.square_sprites.remove(sprite)
                 if not block.square_sprites:
                     self.existing_blocks.remove(block)
 
-        # Collapse
         self._collapse(line_ys_to_clear)
 
         return True
 
     def _collapse(self, line_ys_to_clear):
-        # for base_y in line_ys_to_clear:
-        #     # Move every row above this y down
-        #     for y in range(base_y + 1, self.height):
-
-        # TODO test idea
         movable_block_exists = True
         while movable_block_exists:
             c = 0
             for block in self.existing_blocks:
+                # for sprite in block.square_sprites:
+                #     x, y = block.grid_coord(sprite.bounding_coord)
+                #     texture_cell = self.tetris_maplayer.cells[x][y]
+                #     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+
                 self.current_block = block
                 if self._move_block('DOWN'):
                     c += 1
