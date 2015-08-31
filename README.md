@@ -3,7 +3,6 @@
 **TODOS**
 * lose condition
 * UI
-  * Score
   * Next block
   * Menu
 * Difficulty speed ups
@@ -15,6 +14,7 @@
 * Rotation
 * Line clearing and collapsing afterwards
 * Timed drop sets blocks in place and makes new blocks
+* Scoring
 
 
 **How to run**
