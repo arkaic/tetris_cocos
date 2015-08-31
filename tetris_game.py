@@ -361,6 +361,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         for i in range(3):
             digit_int = int(strscore[i])
             digit = self.digit_sprite_sets[i][digit_int]
+            self.chosen_digits.append(digit)
             for sprite in digit.sprites:
                 x, y = sprite.bounding_coord
                 sprite.position = (offsetpx_x + x * 9, offsetpx_y + y * 9)
