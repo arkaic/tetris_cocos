@@ -520,17 +520,13 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         for block in blocks_to_remove:
             self.existing_blocks.remove(block)
 
-        self._collapse(line_ys_to_clear)
-
-        return len(line_ys_to_clear)
-
-    def _collapse(self, line_ys_to_clear):
-        """ Shifts every block square above the row lines (line_ys)
-        Keeps track of a base row that determines which squares to shift down
-        """
+        #-----------------------------------------------------------------------
+        #                              Collapse
+        # Shifts every block square above the row lines (line_ys). Keeps track 
+        # of a base row that determines which squares to shift down
+        #-----------------------------------------------------------------------
         prev_y = None
         base_y = line_ys_to_clear[0]
-
         for y in line_ys_to_clear:
             if prev_y is not None:
                 base_y += (y - prev_y - 1)
@@ -553,8 +549,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     # Draw sprite
                     texture_cell = self.tetris_maplayer.cells[new_x][new_y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
-
             prev_y = y
+        return len(line_ys_to_clear)
 
     def _board_to_string(self):
         s = ""
