@@ -12,7 +12,7 @@ class SquareSprite(Sprite):
     """ The bounding_coord represents its location in an abstract bounding square
     centered on the origin 0,0. The grid_coord is the actual coordinate location
     on the sprite grid """
-    
+
     bounding_coord = None
     grid_coord = None
 
@@ -366,89 +366,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.key_pressed = None
         self.unschedule(self._button_held)
 
-    def _display_score(self):
-        """ Erase previous three digits and display new ones
-        """
-
-        # Erase
-        for digit in self.chosen_digits:
-            for sprite in digit.sprites:
-                self.remove(sprite)
-        self.chosen_digits = []
-
-        # Format score for 3 digit manipulation
-        strscore = str(self.score)
-        if len(strscore) < 3:
-            if len(strscore) == 2:
-                strscore = '0' + strscore
-            elif len(strscore) == 1:
-                strscore = '00' + strscore
-
-        # Display three digits
-        offsetpx_x, offsetpx_y = 250, 200
-        for i in range(3):
-            digit_int = int(strscore[i])
-            digit = self.digit_sprite_sets[i][digit_int]
-            self.chosen_digits.append(digit)
-            for sprite in digit.sprites:
-                x, y = sprite.bounding_coord
-                sprite.position = (offsetpx_x + x * 9, offsetpx_y + y * 9)
-                self.add(sprite, z=1)
-            offsetpx_x += 40
-
-    def _new_block(self, blockchar=None):
-        """ Note: This should be called when self.current_block == None
-        All conditions:
-          blockchar=None, current exists => nothing happens
-          blockchar=None, no current => get random
-          blockchar=<char>, current exists => nothing happens
-          blockchar=<char>, no current => use supplied
-        """
-
-        if self.current_block:
-            raise ShouldntHappenError("Getting a new block without removing current")
-
-        rotated_state = 0  # Change to rng if needed to randomize
-        if blockchar is None:
-            r = randrange(0, 7)
-            if r == 0:
-                self.current_block = Block('L', self, rotated_state)
-            elif r == 1:
-                self.current_block = Block('J', self, rotated_state)
-            elif r == 2:
-                self.current_block = Block('I', self, rotated_state)
-            elif r == 3:
-                self.current_block = Block('O', self, rotated_state)
-            elif r == 4:
-                self.current_block = Block('S', self, rotated_state)
-            elif r == 5:
-                self.current_block = Block('Z', self, rotated_state)
-            elif r == 6:
-                self.current_block = Block('T', self, rotated_state)
-        else:
-            self.current_block = Block(blockchar, self, rotated_state)
-        self.existing_blocks.append(self.current_block)
-
-        # Draw sprites on layer
-        for s in self.current_block.square_sprites:
-            x, y = self.current_block.grid_coord(s)
-            texture_cell = self.tetris_maplayer.cells[x][y]
-            s.position = (texture_cell.x + 9, texture_cell.y + 9)
-            self.add(s, z=1)
-
-    def _timed_drop(self, dt):
-        if self.current_block.can_move('DOWN'):
-            self._move_block('DOWN')
-        else:
-            self._move_block('DROP')
-
-    def _button_held(self, dt):
-        if self.key_pressed:
-            if self.key_pressed == 'DOWN':
-                self._move_block('DROP')
-            else:
-                self._move_block(self.key_pressed)
-
     def _move_block(self, direction):
         if direction == 'LEFT':
             if self.current_block.move('LEFT'):
@@ -489,6 +406,46 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     x, y = self.current_block.grid_coord(sprite)
                     texture_cell = self.tetris_maplayer.cells[x][y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+
+    def _new_block(self, blockchar=None):
+        """ Note: This should be called when self.current_block == None
+        All conditions:
+          blockchar=None, current exists => nothing happens
+          blockchar=None, no current => get random
+          blockchar=<char>, current exists => nothing happens
+          blockchar=<char>, no current => use supplied
+        """
+
+        if self.current_block:
+            raise ShouldntHappenError("Getting a new block without removing current")
+
+        rotated_state = 0  # Change to rng if needed to randomize
+        if blockchar is None:
+            r = randrange(0, 7)
+            if r == 0:
+                self.current_block = Block('L', self, rotated_state)
+            elif r == 1:
+                self.current_block = Block('J', self, rotated_state)
+            elif r == 2:
+                self.current_block = Block('I', self, rotated_state)
+            elif r == 3:
+                self.current_block = Block('O', self, rotated_state)
+            elif r == 4:
+                self.current_block = Block('S', self, rotated_state)
+            elif r == 5:
+                self.current_block = Block('Z', self, rotated_state)
+            elif r == 6:
+                self.current_block = Block('T', self, rotated_state)
+        else:
+            self.current_block = Block(blockchar, self, rotated_state)
+        self.existing_blocks.append(self.current_block)
+
+        # Draw sprites on layer
+        for s in self.current_block.square_sprites:
+            x, y = self.current_block.grid_coord(s)
+            texture_cell = self.tetris_maplayer.cells[x][y]
+            s.position = (texture_cell.x + 9, texture_cell.y + 9)
+            self.add(s, z=1)
 
     def _clear_lines(self):
         """ Clear any complete lines and collapse the squares as a result """
@@ -568,7 +525,49 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     texture_cell = self.tetris_maplayer.cells[new_x][new_y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
             prev_y = y
-        return len(rows_to_clear) 
+        return len(rows_to_clear)
+
+    def _display_score(self):
+        """ Erase previous three digits and display new ones """
+
+        # Erase
+        for digit in self.chosen_digits:
+            for sprite in digit.sprites:
+                self.remove(sprite)
+        self.chosen_digits = []
+
+        # Format score for 3 digit manipulation
+        strscore = str(self.score)
+        if len(strscore) < 3:
+            if len(strscore) == 2:
+                strscore = '0' + strscore
+            elif len(strscore) == 1:
+                strscore = '00' + strscore
+
+        # Display three digits
+        offsetpx_x, offsetpx_y = 250, 200
+        for i in range(3):
+            digit_int = int(strscore[i])
+            digit = self.digit_sprite_sets[i][digit_int]
+            self.chosen_digits.append(digit)
+            for sprite in digit.sprites:
+                x, y = sprite.bounding_coord
+                sprite.position = (offsetpx_x + x * 9, offsetpx_y + y * 9)
+                self.add(sprite, z=1)
+            offsetpx_x += 40
+
+    def _timed_drop(self, dt):
+        if self.current_block.can_move('DOWN'):
+            self._move_block('DOWN')
+        else:
+            self._move_block('DROP')
+
+    def _button_held(self, dt):
+        if self.key_pressed:
+            if self.key_pressed == 'DOWN':
+                self._move_block('DROP')
+            else:
+                self._move_block(self.key_pressed)
 
     def _board_to_string(self):
         s = ""
