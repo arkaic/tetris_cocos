@@ -6,8 +6,13 @@ from cocos.actions import Place
 from random import randrange
 from pyglet import window
 
+# How I'm rendering: see docstrings in Tetris Board 
 
 class SquareSprite(Sprite):
+    """ The bounding_coord represents its location in an abstract bounding square
+    centered on the origin 0,0. The grid_coord is the actual coordinate location
+    on the sprite grid """
+    
     bounding_coord = None
     grid_coord = None
 
@@ -18,24 +23,31 @@ class SquareSprite(Sprite):
                                            anchor=anchor)
         self.bounding_coord = coord
 
-    def set_grid_coord(self, coord):
-        self.grid_coord = coord
-
 
 class Block:
     """ References all SquareSprites and their location on the model 2D array.
-    Sprites will exist inside an abstract bounding square that this class defines.
+    Sprites will exist inside an abstract bounding square that this class defines,
+    depending on the type of block.
 
     Each block will have following attributes:
      * Bounding square coordinates for each sprite, relative to origin point 0,0.
-       (TODO or this is a SquareSprite attribute instead)
      * Sprite grid coordinate that the origin point is mapped to.
+     * A single grid location coordinate that is used as the block's actual 
+       location in the grid. When the block moves, it's just this coordinate that 
+       moves. It is also defined as the origin point in the abstract bounding 
+       square and it is the sprites that are offsetted from this coordinate, 
+       giving the appearance of moving or rotating the block.
+
+    The abstract bounding square is used to manipulate how a specific block 
+    should rotate. Apparently, there ARE standards on how each rotates, which
+    can be found in the tetris wikia. I'm using the most common one, which is
+    what originally defined this abstract bounding square.
     """
 
     char = None
-    board_layer = None  # cocos parent layer
-    sprite_grid = None
-    square_sprites = None
+    board_layer = None     # cocos parent layer
+    sprite_grid = None     # references the Board layer's grid
+    square_sprites = None  # list of all squares for the block (Sprite)
     _gridlocation_coord = None
 
     def __init__(self, block_char, tetrisboardlayer, rotated_state):
@@ -44,6 +56,7 @@ class Block:
         self.sprite_grid = tetrisboardlayer.sprite_grid
         self.square_sprites = []
 
+        # Define the bounding square coordinates of the block
         init_bounding_coords = []
         img = None
         if self.char == 'I':
@@ -241,7 +254,8 @@ class Block:
 
 
 class DigitSpriteGroup:
-    """ Holds a group of smaller square sprites arranged to represent a digit
+    """ Holds a group of smaller square sprites arranged to represent a digit. 
+    This is for showing the score on the upper right, during the game
      *   *
     * *  *
     * *  *
@@ -288,8 +302,8 @@ class DigitSpriteGroup:
 
 
 class TetrisBoardLayer(layer.ScrollableLayer):
-    """ Also keeps track of SquareSprites in a 2D array because the rectmap.cells
-    array only tracks the background texture.
+    """ The code isn't very MVC, but it does keep a simple model matrix data 
+    structure, the spite_grid, to hold the SquareSprites.
     """
 
     width = 10
@@ -337,6 +351,20 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         # Schedule timed drop of block
         self.schedule_interval(self._timed_drop, .4)
+
+    def on_key_press(self, key, modifiers):
+        # Note: finishes execution when key pressed and only once, even if held
+        if not self.key_pressed:
+            self.key_pressed = window.key.symbol_string(key)
+            if self.key_pressed == 'DOWN':
+                self._move_block('DROP')
+            else:
+                self._move_block(self.key_pressed)
+            self.schedule_interval(self._button_held, self.keydelay_interval)
+
+    def on_key_release(self, key, modifiers):
+        self.key_pressed = None
+        self.unschedule(self._button_held)
 
     def _display_score(self):
         """ Erase previous three digits and display new ones
@@ -408,20 +436,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             s.position = (texture_cell.x + 9, texture_cell.y + 9)
             self.add(s, z=1)
 
-    def on_key_press(self, key, modifiers):
-        # Note: finishes execution when key pressed and only once, even if held
-        if not self.key_pressed:
-            self.key_pressed = window.key.symbol_string(key)
-            if self.key_pressed == 'DOWN':
-                self._move_block('DROP')
-            else:
-                self._move_block(self.key_pressed)
-            self.schedule_interval(self._button_held, self.keydelay_interval)
-
-    def on_key_release(self, key, modifiers):
-        self.key_pressed = None
-        self.unschedule(self._button_held)
-
     def _timed_drop(self, dt):
         if self.current_block.can_move('DOWN'):
             self._move_block('DOWN')
@@ -477,20 +491,22 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
 
     def _clear_lines(self):
+        """ Clear any complete lines and collapse the squares as a result """
+
         # Get list of y coordinates to clear
-        line_ys_to_clear = []
+        rows_to_clear = []  # will hold y coordinates
         for y in range(len(self.sprite_grid[0])):
             for x in range(len(self.sprite_grid)):
                 if self.sprite_grid[x][y] is None:
                     break
                 if x == len(self.sprite_grid) - 1:
-                    line_ys_to_clear.append(y)
+                    rows_to_clear.append(y) 
 
-        if not line_ys_to_clear:
+        if not rows_to_clear: 
             return 0
 
         # Clear lines
-        for y in line_ys_to_clear:
+        for y in rows_to_clear: 
             for x in range(len(self.sprite_grid)):
                 try:
                     self.remove(self.sprite_grid[x][y])
@@ -501,7 +517,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 # Library function remove() doesn't nullify parent
                 self.sprite_grid[x][y].parent = None
                 self.sprite_grid[x][y] = None
-        # print("Cleared lines\n{}".format(self._board_to_string()))
 
         # Remove cleared sprites from their blocks
         blocks_to_remove = []
@@ -521,13 +536,13 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             self.existing_blocks.remove(block)
 
         #-----------------------------------------------------------------------
-        #                              Collapse
-        # Shifts every block square above the row lines (line_ys). Keeps track 
+        #                              Collapsing
+        # Shifts down every block above the row lines (line_ys). Keeps track 
         # of a base row that determines which squares to shift down
         #-----------------------------------------------------------------------
         prev_y = None
-        base_y = line_ys_to_clear[0]
-        for y in line_ys_to_clear:
+        base_y = rows_to_clear[0] 
+        for y in rows_to_clear: 
             if prev_y is not None:
                 base_y += (y - prev_y - 1)
 
@@ -537,20 +552,23 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     if sprite.grid_coord[1] < base_y:
                         continue
 
-                    # Move sprite down on sprite grid
+                    # Move sprite down on sprite grid by removing it and putting
+                    # it in its new position.
                     grid_x, grid_y = (sprite.grid_coord[0], sprite.grid_coord[1])
                     new_x, new_y = (grid_x, grid_y - 1)
                     if self.sprite_grid[grid_x][grid_y] is sprite:
-                        # sprite => erase, none => do nothing, something else => nothing
+                        # The sprite may not be in its original location because
+                        # it could have been replaced by another sprite above it
+                        # and within the same block, which is why the check.
                         self.sprite_grid[grid_x][grid_y] = None
                     self.sprite_grid[new_x][new_y] = sprite
                     sprite.grid_coord = (new_x, new_y)
 
-                    # Draw sprite
+                    # Do the rendering
                     texture_cell = self.tetris_maplayer.cells[new_x][new_y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
             prev_y = y
-        return len(line_ys_to_clear)
+        return len(rows_to_clear) 
 
     def _board_to_string(self):
         s = ""
@@ -569,7 +587,9 @@ class ShouldntHappenError(UserWarning):
     pass
 
 
-################################################################################
+#===============================================================================
+#===========                    MAIN SCRIPT                     ================
+#===============================================================================
 
 if __name__ == '__main__':
     director.init(resizable=True)
