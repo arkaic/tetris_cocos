@@ -1,20 +1,29 @@
+from random import randrange
+
 import cocos
 from cocos import layer, scene
 from cocos.sprite import Sprite
 from cocos.director import director
 from cocos.actions import Place
-from random import randrange
 from pyglet import window
 
 # How I'm rendering: see docstrings in Tetris Board 
 
 class SquareSprite(Sprite):
-    """ The bounding_coord represents its location in an abstract bounding square
-    centered on the origin 0,0. The grid_coord is the actual coordinate location
-    on the sprite grid """
+    """ 
+    The bounding_coord represents its location in an abstract bounding square
+    centered on the origin 0,0. It is for the purposes of rotation
+    The grid_coord is the actual coordinate location
+    on the sprite grid 
+    """
+
+    # todo: refactor SquareSprite into composition instead of inheritance.
+    # remove bounding_coord and keep that Block-side. Square sprite could also
+    # be renamed Square. keep a reference to the Block and its own grid coord
+    # use properties
 
     bounding_coord = None
-    grid_coord = None
+    grid_coord = None  # 108, 173, 204 reassignments; 480 reffed
 
     def __init__(self, image, coord, position=(0, 0), rotation=0, scale=1,
                  opacity=255, color=(255, 255, 255), anchor=None):
@@ -303,7 +312,7 @@ class DigitSpriteGroup:
 
 class TetrisBoardLayer(layer.ScrollableLayer):
     """ The code isn't very MVC, but it does keep a simple model matrix data 
-    structure, the spite_grid, to hold the SquareSprites.
+    structure, the sprite_grid, to hold the SquareSprites.
     """
 
     width = 10
@@ -312,7 +321,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     start_block_char = 'T'
     is_event_handler = True
     key_pressed = None
-    sprite_grid = None
+    sprite_grid = None     # MODEL
     current_block = None
     tetris_maplayer = None
     sandbox = None   # Palette for block creation
@@ -325,6 +334,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
     def __init__(self, xmlpath):
         super(TetrisBoardLayer, self).__init__()
+
+        # width | [length -------> ] 
+        #       | [                ]
+        #       v [                ]
 
         self.sprite_grid = [[None for y in range(self.height)] for x in range(self.width)]
         r = cocos.tiles.load(xmlpath)
@@ -390,12 +403,14 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             while self.current_block.can_move('DOWN'):
                 self._move_block('DOWN')
 
-            # Clear any existing lines and record the number of lines
-            numlines = self._clear_lines()
-
-            # Increment and display score
-            self.score += numlines
-            self._display_score()
+            # Each clear can produce new lines so iteratively clear.
+            while True:
+                numlines = self._clear_lines()
+                if numlines == 0:
+                    break
+                # Increment and display score
+                self.score += numlines
+                self._display_score()
 
             self.current_block = None
             self._new_block()
@@ -450,16 +465,17 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     def _clear_lines(self):
         """ Clear any complete lines and collapse the squares as a result """
 
-        # Get list of y coordinates to clear
+        # Get list of y coordinates to clear. If there are any holes in a line,
+        # move one.
         rows_to_clear = []  # will hold y coordinates
         for y in range(len(self.sprite_grid[0])):
             for x in range(len(self.sprite_grid)):
                 if self.sprite_grid[x][y] is None:
                     break
                 if x == len(self.sprite_grid) - 1:
-                    rows_to_clear.append(y) 
+                    rows_to_clear.append(y)
 
-        if not rows_to_clear: 
+        if not rows_to_clear:
             return 0
 
         # Clear lines
@@ -475,6 +491,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.sprite_grid[x][y].parent = None
                 self.sprite_grid[x][y] = None
 
+        # TODO comment out or delete once new collapse sticky comes in
         # Remove cleared sprites from their blocks
         blocks_to_remove = []
         for block in self.existing_blocks:
@@ -496,6 +513,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         #                              Collapsing
         # Shifts down every block above the row lines (line_ys). Keeps track 
         # of a base row that determines which squares to shift down
+        # rows_to_clear, 
         #-----------------------------------------------------------------------
         prev_y = None
         base_y = rows_to_clear[0] 
@@ -525,7 +543,36 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     texture_cell = self.tetris_maplayer.cells[new_x][new_y]
                     sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
             prev_y = y
-        return len(rows_to_clear)
+
+        # Assert no rows 
+        # try:
+            # for 
+        # except AssertionError:
+            # TODO: helpful log reports for this
+            # exit()
+        
+        return len(rows_to_clear)  # numlines
+
+    def _collapse(self, rows_to_clear):
+        """ Sticky method: identify all clumps above each cleared row and drop 
+        them independently. More specifically, round robin drop them one square
+        at a time. The round robin order starts with clumps above first complete
+        line, then above second line and so on.
+        """
+
+        # todo identify clumps and add to clump list: start with a square and
+        # recursively find non-diagonally adjacent neighbor squares: recursive
+        # implementation can do a flood scan until no more unvisited cells left
+        # to go to. 
+        # (?also keep track of squares that have empty space below them?) 
+        for y in rows_to_clear:
+            pass
+
+        # todo round robin: while loop and use modulus. Keep a counter of 
+        # consecutive moveable clumps visited. Once counter == total number of 
+        # clumps, end. Moveable is defined as ALL "bottom squares" of a clump having
+        # currently empty space below them. 
+        # if clump is moveable
 
     def _display_score(self):
         """ Erase previous three digits and display new ones """
