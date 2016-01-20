@@ -221,23 +221,32 @@ class Block:
                     rotated_bound_x = -bound_y
                 rotated_bound_y = bound_x
 
+            # TODO! Possible fix: parameters to _has_square...() should not be
+            # bounding coordinates
             if not self._has_square_in_location((rotated_bound_x, rotated_bound_y)):
-                # if not part of the block, check if rotated coordinates fit within
-                # tetris grid and if the square in the square matrix matches any
-                # of the squares this block currently holds
+                # If new rotated coordinates DOES match any of the block's own
+                # squares, then GREAT!
+                # Otherwise, we're in here. Make sure it's not outside of tetris
+                # grid dimensions and if its location in the square matrix is not
+                # taken up by a square not in block
                 rotated_x = rotated_bound_x + self.location[0]
                 rotated_y = rotated_bound_y + self.location[1]
 
                 if rotated_x < 0 or rotated_x >= self.board_layer.width:
                     return False
-                if (self.squares_matrix[rotated_x][rotated_y] is not None and
-                        self.squares_matrix[rotated_x][rotated_y] not in self.squares):
-                    return False
+                if self.squares_matrix[rotated_x][rotated_y] is not None:
+                    if self.squares_matrix[rotated_x][rotated_y] not in self.squares:
+                        return False
+                    else:
+                        msg = "A square's location doesn't match its square matrix location"
+                        raise ShouldntHappenError(msg)
+
         return True
 
     def _has_square_in_location(self, location):
         for square in self.squares:
-            if location[0] == square.x and location[1] == square.y
+            if square.x == location[0] and square.y == location[1]:
+                return True
         return False
 
 
@@ -253,9 +262,9 @@ class DigitSquareGroup:
 
     class DigitSquare(object):
          def __init__(self, image, bounding_loc):
-            self._sprite = Sprite(image, position=(0, 0), rotation=0, scale=1, 
+            self.sprite = Sprite(image, position=(0, 0), rotation=0, scale=1, 
                                   opacity=255, color=(255, 255, 255), anchor=None)
-            self._bounding_location = bounding_loc
+            self.bounding_location = bounding_loc
 
     bounding_map = {
         0: [(1, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (1, 4)],
@@ -286,7 +295,7 @@ class DigitSquareGroup:
 
         img = self.atoms.cells[0][digit].tile.image
         for loc in self.bounding_locations:
-            self.digit_squares.append(DigitSquare(img, loc))
+            self.digit_squares.append(self.DigitSquare(img, loc))
 
 
 class TetrisBoardLayer(layer.ScrollableLayer):
@@ -331,7 +340,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         # Add group of sprites based on current block
         self._new_block(self.start_block_name)
 
-        # Set up scoreboard
+        # Set up scoreboard. Specifically, digit_sprite_sets shall hold 3 lists
+        # of 10 DigitSquareGroup objects, one for each decimal symbol
         for x in range(3):
             digits = []
             for y in range(10):
@@ -534,8 +544,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         # Erase
         for digit in self.chosen_digits:
-            for sprite in digit.sprites:
-                self.remove(sprite)
+            for square in digit.digit_squares:
+                self.remove(square.sprite)
         self.chosen_digits = []
 
         # Format score for 3 digit manipulation
@@ -552,10 +562,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             digit_int = int(strscore[i])
             digit = self.digit_sprite_sets[i][digit_int]
             self.chosen_digits.append(digit)
-            for sprite in digit.sprites:
-                x, y = sprite.bounding_coord
-                sprite.position = (offsetpx_x + x * 9, offsetpx_y + y * 9)
-                self.add(sprite, z=1)
+            for square in digit.digit_squares:
+                x, y = square.bounding_location
+                square.sprite.position = (offsetpx_x + x * 9, offsetpx_y + y * 9)
+                self.add(square.sprite, z=1)
             offsetpx_x += 40
 
     def _timed_drop(self, dt):
