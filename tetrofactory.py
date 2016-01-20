@@ -1,3 +1,5 @@
+from random import randrange
+
 import tetris_game
 
 blockmap = ['L', 'J', 'I', 'O', 'S', 'Z', 'T']
@@ -52,7 +54,7 @@ def makeblock(board_layer, name=None):
         block.squares.append(square)
         block.squares_matrix[square_x][square_y] = square
         block.bounding_locations_map[square] = bounding_loc
-            
+
     return block
 
 def make_tetris_square(img, block, loc):
