@@ -113,7 +113,9 @@ class Block:
                 self.location = (prev_loc_x + 1, prev_loc_y)
             elif direction == 'DOWN':
                 self.location = (prev_loc_x, prev_loc_y - 1)
-            square.x, square.y = self.location
+            square_bounding_x, square_bounding_y = self.bounding_locations_map[square]
+            square.x = self.location[0] + square_bounding_x
+            square.y = self.location[1] + square_bounding_y
             self.squares_matrix[square.x][square.y] = square
 
         return True
@@ -335,6 +337,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         # Add group of sprites based on current block
         self._new_block(self.start_block_name)
 
+        # DEBUG
+        # for square in self.current_block.squares:
+        #     print(square.x, square.y)
+
         # Set up scoreboard. Specifically, digit_sprite_sets shall hold 3 lists
         # of 10 DigitSquareGroup objects, one for each decimal symbol
         for x in range(3):
@@ -363,6 +369,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.unschedule(self._button_held)
 
     def _move_block(self, direction):
+        # # DEBUG
+        # for square in self.current_block.squares:
+        #     print(square.x, square.y)
+
         if direction == 'LEFT':
             # Does the movement in conditionals
             if self.current_block.move('LEFT'):
@@ -378,6 +388,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         elif direction == 'DOWN':
             if self.current_block.move('DOWN'):
                 for square in self.current_block.squares:
+                    # print(square.x, square.y)
                     texture_cell = self.tetris_maplayer.cells[square.x][square.y]
                     square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'UP':
