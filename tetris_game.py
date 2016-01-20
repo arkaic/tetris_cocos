@@ -186,8 +186,8 @@ class Block:
             # Update bounding locations in the block's dictionary and square's
             # location coordinates on the square matrix
             self.bounding_locations_map[square] = (rotated_bound_x, rotated_bound_y)
-            square.x = rotated_bound_x + block.location[0]
-            square.y = rotated_bound_y + block.location[1]
+            square.x = rotated_bound_x + self.location[0]
+            square.y = rotated_bound_y + self.location[1]
             self.squares_matrix[square.x][square.y] = square
 
         return True
@@ -218,16 +218,15 @@ class Block:
                     rotated_bound_x = -bound_y
                 rotated_bound_y = bound_x
 
-            # TODO! Possible fix: parameters to _has_square...() should not be
-            # bounding coordinates
-            if not self._has_square_in_location((rotated_bound_x, rotated_bound_y)):
+
+            rotated_x = rotated_bound_x + self.location[0]
+            rotated_y = rotated_bound_y + self.location[1]
+            if not self._has_square_in_location((rotated_x, rotated_y)):
                 # If new rotated coordinates DOES match any of the block's own
                 # squares, then GREAT!
                 # Otherwise, we're in here. Make sure it's not outside of tetris
                 # grid dimensions and if its location in the square matrix is not
                 # taken up by a square not in block
-                rotated_x = rotated_bound_x + self.location[0]
-                rotated_y = rotated_bound_y + self.location[1]
 
                 if rotated_x < 0 or rotated_x >= self.board_layer.width:
                     return False
