@@ -9,14 +9,10 @@ from pyglet import window
 
 import tetrofactory
 
-# How I'm rendering: see docstrings in Tetris Board 
-
-class Square(Object):
+class Square(object):
     """ 
     The bounding_coord represents its location in an abstract bounding square
     centered on the origin 0,0. It is for the purposes of rotation
-    The grid_coord is the actual coordinate location
-    on the sprite grid 
     """
 
     # todo: refactor SquareSprite into composition instead of inheritance.
@@ -24,24 +20,30 @@ class Square(Object):
     # be renamed Square. keep a reference to the Block and its own grid coord
     # use properties
 
-    # bounding_coord = None
-    # grid_coord = None  # 108, 173, 204 reassignments; 480 reffed
     _block = None
     _sprite = None
-    _location = None 
+    _x = None    # coordinates on the tetris grid
+    _y = None
 
-    def __init__(self, loc, image, block):
-        self._location = loc
+    def __init__(self, image, block, loc):
         self._sprite = Sprite(image, position=(0, 0), rotation=0, scale=1, 
                               opacity=255, color=(255, 255, 255), anchor=None)
         self._block = block
+        self._x, self._y = loc
 
     @property
-    def location(self):
-        return self._location
-    @location.setter
-    def location(self, value):
-        self._location = value
+    def x(self):
+        return self._x
+    @x.setter
+    def x(self, value):
+        self._x = value
+
+    @property
+    def y(self):
+        return self._y
+    @y.setter
+    def y(self, value):
+        self._y = value
 
     @property
     def sprite(self):
@@ -73,57 +75,18 @@ class Block:
 
     name = None
     board_layer = None     # cocos parent layer
-    squares_matrix = None     # references the Board layer's grid
+    squares_matrix = None     # references the Board layer's grid (model)
     squares = None  # list of all squares for the block (Sprite)
-    _location = None
-    _bounding_locations = None
 
-    def __init__(self, block_name, tetrisboardlayer, rotated_state):
+    # below fields are set by factory
+    _location = None
+    _bounding_locations_map = dict()  # maps square -> bounding location 
+
+    def __init__(self, block_name, tetrisboardlayer):
         self.name = block_name
         self.board_layer = tetrisboardlayer
         self.squares_matrix = tetrisboardlayer.squares_matrix
         self.squares = []
-
-        # Define the bounding square coordinates of the block
-        # TODO refactor the img stuff below to be encapsulated into the factory
-        # img = None
-        if self.name == 'I':
-            self._corelocation = (4, 19)
-            # img = self.board_layer.sandbox.cells[0][0].tile.image
-            self.bounding_locations = [(-1, 1), (0, 1), (1, 1), (2, 1)]
-        elif self.name == 'J':
-            self._corelocation = (4, 20)
-            # img = self.board_layer.sandbox.cells[0][1].tile.image
-            self.bounding_locations = [(-1, 1), (-1, 0), (0, 0), (1, 0)]
-        elif self.name == 'L':
-            self._corelocation = (4, 20)
-            # img = self.board_layer.sandbox.cells[0][2].tile.image
-            self.bounding_locations = [(-1, 0), (0, 0), (1, 0), (1, 1)]
-        elif self.name == 'O':
-            self._corelocation = (4, 20)
-            # img = self.board_layer.sandbox.cells[0][3].tile.image
-            self.bounding_locations = [(0, 1), (0, 0), (1, 1), (1, 0)]
-        elif self.name == 'S':
-            self._corelocation = (4, 20)
-            # img = self.board_layer.sandbox.cells[0][4].tile.image
-            self.bounding_locations = [(-1, 0), (0, 0), (0, 1), (1, 1)]
-        elif self.name == 'T':
-            self._corelocation = (4, 20)
-            # img = self.board_layer.sandbox.cells[0][6].tile.image
-            self.bounding_locations = [(-1, 0), (0, 1), (0, 0), (1, 0)]
-        elif self.name == 'Z':
-            self._corelocation = (4, 20)
-            # img = self.board_layer.sandbox.cells[0][5].tile.image
-            self.bounding_locations = [(-1, 1), (0, 1), (0, 0), (1, 0)]
-
-        # Add sprites to both the member list and the grid model
-        for bounding_coord in self.bounding_locations:
-            # make square and reference sprite            
-            square = Square(img, self)
-            sprite = square.sprite
-            self.squares.append(square)
-            sprite_x, sprite_y = self.grid_coord(sprite)
-            self.squares_matrix[sprite_x][sprite_y] = sprite
 
     @property
     def location(self):
@@ -133,70 +96,61 @@ class Block:
         self._location = value
 
     @property
-    def bounding_locations(self):
-        return self._bounding_locations
-    @bounding_locations.setter
-    def bounding_locations(self, value):
-        self._bounding_locations = value
+    def bounding_locations_map(self):
+        return self._bounding_locations_map
+    @bounding_locations_map.setter
+    def bounding_locations_map(self, value):
+        self._bounding_locations_map = value
 
     def move(self, direction):
-        """ Move sprite on sprite grid (and visually too?)
-        """
         if not self.can_move(direction):
             return False
 
-        # Erase from sprite grid
-        for sprite in self.squares:
-            sprite_x, sprite_y = self.grid_coord(sprite)
-            sprite.grid_coord = None
-            self.squares_matrix[sprite_x][sprite_y] = None
+        # Erase
+        for square in self.squares:
+            self.squares_matrix[square.x][square.y] = None
 
-        # Put sprites into new locations by changing the grid location coord and 
-        # offsetting every sprite by it again.
-        prev_gridloc_x, prev_gridloc_y = self.location
-        for sprite in self.squares:
+        prev_loc_x, prev_loc_y = self.location
+        for square in self.squares:
             if direction == 'LEFT':
-                self.location = (prev_gridloc_x - 1, prev_gridloc_y)
+                self.location = (prev_loc_x - 1, prev_loc_y)
             elif direction == 'RIGHT':
-                self.location = (prev_gridloc_x + 1, prev_gridloc_y)
+                self.location = (prev_loc_x + 1, prev_loc_y)
             elif direction == 'DOWN':
-                self.location = (prev_gridloc_x, prev_gridloc_y - 1)
-            sprite_x, sprite_y = self.grid_coord(sprite)
-            self.squares_matrix[sprite_x][sprite_y] = sprite
+                self.location = (prev_loc_x, prev_loc_y - 1)
+            square.x, square.y = self.location
+            self.squares_matrix[square.x][square.y] = square
 
         return True
 
     def can_move(self, direction):
-        """ Sprite coordinates are made up of the grid location offset by the
-        bounding coords
-        """
         # TODO refactor lines around for terseness
-        for sprite in self.squares:
-            sprite_x, sprite_y = self.grid_coord(sprite)
+        for square in self.squares:
             if direction == 'LEFT':
-                if sprite_x <= 0:
+                if square.x <= 0:
                     return False
-                if (not self._is_a_block_coord((sprite_x - 1, sprite_y)) and
-                        self.squares_matrix[sprite_x - 1][sprite_y] is not None):
+                if (not self._has_square_in_location((square.x - 1, square.y)) and
+                        self.squares_matrix[square.x - 1][square.y] is not None):
                     # if shifted position of square is not in block and there's
                     # something in that shifted coordinate, can't move block
                     return False
             elif direction == 'RIGHT':
-                if sprite_x >= self.board_layer.width - 1:
+                if square.x >= self.board_layer.width - 1:
                     return False
-                if (not self._is_a_block_coord((sprite_x + 1, sprite_y)) and
-                        self.squares_matrix[sprite_x + 1][sprite_y] is not None):
+                if (not self._has_square_in_location((square.x + 1, square.y)) and
+                        self.squares_matrix[square.x + 1][square.y] is not None):
                     return False
             elif direction == 'DOWN':
-                if sprite_y <= 0:
+                if square.y <= 0:
                     return False
-                if (not self._is_a_block_coord((sprite_x, sprite_y - 1)) and
-                        self.squares_matrix[sprite_x][sprite_y - 1] is not None):
+                if (not self._has_square_in_location((square.x, square.y - 1)) and
+                        self.squares_matrix[square.x][square.y - 1] is not None):
                     return False
         return True
 
     def rotate(self, direction):
-        """ Formula for I and O block
+        """ 
+        Formula for I and O blocks
         newXccw = centerX + centerY - y
         newYccw = centerY - centerX + x
         newXcw  = centerX - centerY + y
@@ -211,15 +165,13 @@ class Block:
             return False
 
         # Erase
-        for sprite in self.squares:
-            sprite_x, sprite_y = self.grid_coord(sprite)
-            sprite.grid_coord = None
-            self.squares_matrix[sprite_x][sprite_y] = None
+        for square in self.squares:
+            self.squares_matrix[square.x][square.y] = None
 
-        # Rotate and reassign the bounding coords of the square. Then get the
-        # grid coordinates and write the square into the model grid.
-        for sprite in self.squares:
-            bound_x, bound_y = sprite.bounding_coord
+        # Rotate using formulas above
+        for square in self.squares:
+            # Calculate new bounding coordinates
+            bound_x, bound_y = self.bounding_locations_map[square]
             rotated_bound_x, rotated_bound_y = None, None
             if direction == 'CLOCKWISE':
                 rotated_bound_x = bound_y
@@ -234,24 +186,14 @@ class Block:
                     rotated_bound_x = -bound_y
                 rotated_bound_y = bound_x
 
-            if direction == 'CLOCKWISE' or direction == 'COUNTERCLOCKWISE':
-                sprite.bounding_coord = (rotated_bound_x, rotated_bound_y)
-                sprite_x, sprite_y = self.grid_coord(sprite)
-                self.squares_matrix[sprite_x][sprite_y] = sprite
+            # Update bounding locations in the block's dictionary and square's
+            # location coordinates on the square matrix
+            self.bounding_locations_map[square] = (rotated_bound_x, rotated_bound_y)
+            square.x = rotated_bound_x + block.location[0]
+            square.y = rotated_bound_y + block.location[1]
+            self.squares_matrix[square.x][square.y] = square
 
         return True
-
-    def grid_coord(self, sprite):
-        if sprite in self.squares:
-            if sprite.grid_coord is None:
-                sprite.grid_coord = (
-                    sprite.bounding_coord[0] + self.location[0],
-                    sprite.bounding_coord[1] + self.location[1])
-            return sprite.grid_coord
-
-    def bound_to_grid_coord(self, bound_coord):
-        return (bound_coord[0] + self.location[0],
-                bound_coord[1] + self.location[1])
 
     def _can_rotate(self, direction):
         """ Formula for I and O block
@@ -264,8 +206,8 @@ class Block:
         ccw =>   x,y => -y, x
         cw  =>   x,y =>  y,-x
         """
-        for sprite in self.squares:
-            bound_x, bound_y = sprite.bounding_coord
+        for square in self.squares:
+            bound_x, bound_y = self.bounding_locations_map[square]
             if direction == 'CLOCKWISE':
                 rotated_bound_x = bound_y
                 if self.name == 'I' or self.name == 'O':
@@ -279,25 +221,27 @@ class Block:
                     rotated_bound_x = -bound_y
                 rotated_bound_y = bound_x
 
-            if not self._is_a_block_coord((rotated_bound_x, rotated_bound_y)):
-                # if not part of the block and the direction is correct
-                rotated_sprite_x, rotated_sprite_y = self.bound_to_grid_coord((rotated_bound_x, rotated_bound_y))
+            if not self._has_square_in_location((rotated_bound_x, rotated_bound_y)):
+                # if not part of the block, check if rotated coordinates fit within
+                # tetris grid and if the square in the square matrix matches any
+                # of the squares this block currently holds
+                rotated_x = rotated_bound_x + self.location[0]
+                rotated_y = rotated_bound_y + self.location[1]
 
-                if rotated_sprite_x < 0 or rotated_sprite_x >= self.board_layer.width:
+                if rotated_x < 0 or rotated_x >= self.board_layer.width:
                     return False
-                if (self.squares_matrix[rotated_sprite_x][rotated_sprite_y] is not None and
-                        self.squares_matrix[rotated_sprite_x][rotated_sprite_y] not in self.squares):
+                if (self.squares_matrix[rotated_x][rotated_y] is not None and
+                        self.squares_matrix[rotated_x][rotated_y] not in self.squares):
                     return False
         return True
 
-    def _is_a_block_coord(self, grid_coord):
+    def _has_square_in_location(self, location):
         for square in self.squares:
-            if grid_coord == self.grid_coord(square):
-                return True
+            if location[0] == square.x and location[1] == square.y
         return False
 
 
-class DigitSpriteGroup:
+class DigitSquareGroup:
     """ Holds a group of smaller square sprites arranged to represent a digit. 
     This is for showing the score on the upper right, during the game
      *   *
@@ -306,49 +250,48 @@ class DigitSpriteGroup:
     * *  *
      *   *
     """
+
+    class DigitSquare(object):
+         def __init__(self, image, bounding_loc):
+            self._sprite = Sprite(image, position=(0, 0), rotation=0, scale=1, 
+                                  opacity=255, color=(255, 255, 255), anchor=None)
+            self._bounding_location = bounding_loc
+
+    bounding_map = {
+        0: [(1, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (1, 4)],
+        1: [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)],
+        2: [(1, 0), (2, 0), (0, 1), (1, 2), (2, 3), (0, 4), (1, 4), (0, 2)],
+        3: [(0, 0), (1, 0), (2, 1), (1, 2), (2, 3), (0, 4), (1, 4)],
+        4: [(2, 0), (2, 1), (0, 2), (1, 2), (2, 2), (0, 3), (2, 3), (0, 4), (2, 4)],
+        5: [(0, 0), (1, 0), (2, 1), (1, 2), (0, 3), (1, 4), (2, 4), (0, 2)],
+        6: [(1, 0), (0, 1), (2, 1), (0, 2), (1, 2), (0, 3), (1, 4), (2, 4)],
+        7: [(0, 0), (0, 1), (1, 2), (2, 3), (0, 4), (1, 4), (2, 4)],
+        8: [(1, 0), (0, 1), (2, 1), (1, 2), (0, 3), (2, 3), (1, 4)],
+        9: [(0, 0), (1, 0), (2, 1), (1, 2), (2, 2), (0, 3), (2, 3), (1, 4)]
+    }
     digit = None
-    sprites = None
+    digit_squares = None
     atoms = None
+    bounding_locations = None
 
     def __init__(self, digit, atoms):
         if digit < 0 or digit > 9:
             raise ShouldntHappenError("Digit is wrong")
 
         self.digit = digit
-        self.sprites = []
+        self.digit_squares = []
         self.atoms = atoms
 
-        coords = []
-        if digit == 0:
-            coords = [(1, 0), (0, 1), (2, 1), (0, 2), (2, 2), (0, 3), (2, 3), (1, 4)]
-        elif digit == 1:
-            coords = [(1, 0), (1, 1), (1, 2), (1, 3), (1, 4)]
-        elif digit == 2:
-            coords = [(1, 0), (2, 0), (0, 1), (1, 2), (2, 3), (0, 4), (1, 4), (0, 2)]
-        elif digit == 3:
-            coords = [(0, 0), (1, 0), (2, 1), (1, 2), (2, 3), (0, 4), (1, 4)]
-        elif digit == 4:
-            coords = [(2, 0), (2, 1), (0, 2), (1, 2), (2, 2), (0, 3), (2, 3), (0, 4), (2, 4)]
-        elif digit == 5:
-            coords = [(0, 0), (1, 0), (2, 1), (1, 2), (0, 3), (1, 4), (2, 4), (0, 2)]
-        elif digit == 6:
-            coords = [(1, 0), (0, 1), (2, 1), (0, 2), (1, 2), (0, 3), (1, 4), (2, 4)]
-        elif digit == 7:
-            coords = [(0, 0), (0, 1), (1, 2), (2, 3), (0, 4), (1, 4), (2, 4)]
-        elif digit == 8:
-            coords = [(1, 0), (0, 1), (2, 1), (1, 2), (0, 3), (2, 3), (1, 4)]
-        elif digit == 9:
-            coords = [(0, 0), (1, 0), (2, 1), (1, 2), (2, 2), (0, 3), (2, 3), (1, 4)]
+        self.bounding_locations = self.bounding_map[digit]
 
         img = self.atoms.cells[0][digit].tile.image
-        # TODO fix up the squaresprite refactor
-        for coord in coords:
-            self.sprites.append(SquareSprite(img, coord))
+        for loc in self.bounding_locations:
+            self.digit_squares.append(DigitSquare(img, loc))
 
 
 class TetrisBoardLayer(layer.ScrollableLayer):
     """ The code isn't very MVC, but it does keep a simple model matrix data 
-    structure, the squares_matrix, to hold the SquareSprites.
+    structure, the squares_matrix, to hold the Squares.
     """
 
     width = 10
@@ -366,7 +309,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     existing_blocks = []
     digit_sprite_sets = []
     chosen_digits = []
-    # test_blocks = ['T', 'I']
 
     def __init__(self, xmlpath):
         super(TetrisBoardLayer, self).__init__()
@@ -393,7 +335,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         for x in range(3):
             digits = []
             for y in range(10):
-                digits.append(DigitSpriteGroup(y, r['atoms']))
+                digits.append(DigitSquareGroup(y, r['atoms']))
             self.digit_sprite_sets.append(digits)
 
         self._display_score()
@@ -417,24 +359,28 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
     def _move_block(self, direction):
         if direction == 'LEFT':
+            # Does the movement in conditionals
             if self.current_block.move('LEFT'):
-                for sprite in self.current_block.square_sprites:
-                    x, y = self.current_block.grid_coord(sprite)
-                    texture_cell = self.tetris_maplayer.cells[x][y]
-                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+                # Now do the rendering for each square
+                for square in self.current_block.squares:
+                    texture_cell = self.tetris_maplayer.cells[square.x][square.y]
+                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'RIGHT':
             if self.current_block.move('RIGHT'):
-                # After movement in sprite grid model, do it visually
-                for sprite in self.current_block.square_sprites:
-                    x, y = self.current_block.grid_coord(sprite)
-                    texture_cell = self.tetris_maplayer.cells[x][y]
-                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+                for square in self.current_block.squares:
+                    texture_cell = self.tetris_maplayer.cells[square.x][square.y]
+                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'DOWN':
             if self.current_block.move('DOWN'):
-                for sprite in self.current_block.square_sprites:
-                    x, y = self.current_block.grid_coord(sprite)
-                    texture_cell = self.tetris_maplayer.cells[x][y]
-                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+                for square in self.current_block.squares:
+                    texture_cell = self.tetris_maplayer.cells[square.x][square.y]
+                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+        elif direction == 'UP':
+            # rotate clockwise only
+            if self.current_block.rotate('CLOCKWISE'):
+                for square in self.current_block.squares:
+                    texture_cell = self.tetris_maplayer.cells[square.x][square.y]
+                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'DROP':
             while self.current_block.can_move('DOWN'):
                 self._move_block('DOWN')
@@ -450,13 +396,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
             self.current_block = None
             self._new_block()
-            # print("Collapsed\n{}".format(self._board_to_string()))
-        elif direction == 'UP':
-            if self.current_block.rotate('CLOCKWISE'):
-                for sprite in self.current_block.square_sprites:
-                    x, y = self.current_block.grid_coord(sprite)
-                    texture_cell = self.tetris_maplayer.cells[x][y]
-                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
 
     def _new_block(self, blockname=None):
         """ Note: This should be called when self.current_block == None
@@ -473,11 +412,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.existing_blocks.append(self.current_block)
 
         # Draw sprites on layer
-        for s in self.current_block.square_sprites:
-            x, y = self.current_block.grid_coord(s)
-            texture_cell = self.tetris_maplayer.cells[x][y]
-            s.position = (texture_cell.x + 9, texture_cell.y + 9)
-            self.add(s, z=1)
+        for square in self.current_block.squares:
+            texture_cell = self.tetris_maplayer.cells[square.x][square.y]
+            square.position = (texture_cell.x + 9, texture_cell.y + 9)
+            self.add(square, z=1)
 
     def _clear_lines(self):
         """ Clear any complete lines and collapse the squares as a result """
@@ -502,26 +440,27 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     self.remove(self.squares_matrix[x][y])
                 except Exception:
                     print('Sprite is not a child when clearing')
-                    print('coord:{}\n'.format(self.squares_matrix[x][y].grid_coord))
+                    square = self.squares_matrix[x][y]
+                    print('coord:({},{})\n'.format(square.x, square.y))
                     raise ShouldntHappenError("Shouldn't happen error, closing")
                 # Library function remove() doesn't nullify parent
                 self.squares_matrix[x][y].parent = None
                 self.squares_matrix[x][y] = None
 
-        # TODO comment out or delete once new collapse sticky comes in
+        # TODO comment out or delete once new collapse sticky comes in?
         # Remove cleared sprites from their blocks
         blocks_to_remove = []
         for block in self.existing_blocks:
-            if not block.square_sprites:
+            if not block.squares:
                 blocks_to_remove.append(block)
             else:
-                sprites_to_remove = []
-                for sprite in block.square_sprites:
-                    if not sprite.parent:
-                        sprites_to_remove.append(sprite)
-                for sprite in sprites_to_remove:
-                    block.square_sprites.remove(sprite)
-                if not block.square_sprites:
+                squares_to_remove = []
+                for square in block.squares:
+                    if not square.sprite.parent:
+                        squares_to_remove.append(square)
+                for square in squares_to_remove:
+                    block.squares.remove(square)
+                if not block.squares:
                     blocks_to_remove.append(block)
         for block in blocks_to_remove:
             self.existing_blocks.remove(block)
@@ -539,26 +478,25 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 base_y += (y - prev_y - 1)
 
             for block in self.existing_blocks:
-                for sprite in block.square_sprites:
+                for square in block.squares:
                     # Forget sprites lower than the clear line
-                    if sprite.grid_coord[1] < base_y:
+                    if square.y < base_y:
                         continue
 
-                    # Move sprite down on sprite grid by removing it and putting
+                    # Move square down on square grid by removing it and putting
                     # it in its new position.
-                    grid_x, grid_y = (sprite.grid_coord[0], sprite.grid_coord[1])
-                    new_x, new_y = (grid_x, grid_y - 1)
-                    if self.squares_matrix[grid_x][grid_y] is sprite:
-                        # The sprite may not be in its original location because
-                        # it could have been replaced by another sprite above it
+                    new_x, new_y = (square.x, square.y - 1)
+                    if self.squares_matrix[square.x][square.y] is square:
+                        # The square may not be in its original location because
+                        # it could have been replaced by another square above it
                         # and within the same block, which is why the check.
-                        self.squares_matrix[grid_x][grid_y] = None
-                    self.squares_matrix[new_x][new_y] = sprite
-                    sprite.grid_coord = (new_x, new_y)
+                        self.squares_matrix[square.x][square.y] = None
+                    square.x, square.y = (new_x, new_y)
+                    self.squares_matrix[new_x][new_y] = square
 
                     # Do the rendering
                     texture_cell = self.tetris_maplayer.cells[new_x][new_y]
-                    sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
             prev_y = y
 
         # Assert no rows 
