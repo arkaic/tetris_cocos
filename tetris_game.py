@@ -9,16 +9,11 @@ from pyglet import window
 
 import tetrofactory
 
-class Square(object):
+class Square:
     """ 
     The bounding_coord represents its location in an abstract bounding square
     centered on the origin 0,0. It is for the purposes of rotation
     """
-
-    # todo: refactor SquareSprite into composition instead of inheritance.
-    # remove bounding_coord and keep that Block-side. Square sprite could also
-    # be renamed Square. keep a reference to the Block and its own grid coord
-    # use properties
 
     _block = None
     _sprite = None
@@ -425,7 +420,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         for square in self.current_block.squares:
             texture_cell = self.tetris_maplayer.cells[square.x][square.y]
             square.position = (texture_cell.x + 9, texture_cell.y + 9)
-            self.add(square, z=1)
+            self.add(square.sprite, z=1)
 
     def _clear_lines(self):
         """ Clear any complete lines and collapse the squares as a result """
