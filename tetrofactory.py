@@ -4,7 +4,7 @@ import tetris_game
 
 blockmap = ['L', 'J', 'I', 'O', 'S', 'Z', 'T']
 
-def makeblock(board_layer, name=None):
+def make_tetris_block(board_layer, name=None):
     block = tetris_game.Block(name, board_layer)
 
     # Handle all field settings for the block below
