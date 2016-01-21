@@ -75,7 +75,6 @@ class Block:
     board_layer = None     # cocos parent layer
     squares_matrix = None     # references the Board layer's grid (model)
     squares = None  # list of all squares for the block (Sprite)
-
     # below fields are set by factory
     _location = None
     _bounding_locations_map = dict()  # maps square -> bounding location 
@@ -504,10 +503,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 squares_to_remove = []
                 for square in block.squares:
                     if not square.sprite.parent:
-                        # print("   to remove: {},{}".format(square.x, square.y))
                         squares_to_remove.append(square)
-                    else:
-                        # print("   has parent: {},{}".format(square.x, square.y))
                 totalremoved += len(squares_to_remove)
                 for square in squares_to_remove:
                     block.squares.remove(square)
