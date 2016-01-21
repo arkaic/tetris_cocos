@@ -458,7 +458,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         if not rows_to_clear:
             return 0
 
-        print('TO CLEAR\n', self._board_to_string())
+        # DEBUG
+        # print('TO CLEAR\n', self._board_to_string())
 
         # Clear lines
         for y in rows_to_clear: 
@@ -491,29 +492,30 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         # TODO comment out or delete once new collapse sticky comes in?
         # Clear out "dead" squares that each existing block holds. If a block has
         # no more squares left, remove that block from existing blocks
-        print('%d existing blocks' % len(self.existing_blocks))
+        # print('%d existing blocks' % len(self.existing_blocks))
         blocks_to_remove = []
         totalremoved = 0
         for block in self.existing_blocks:
-            print('block: {}'.format(block.name))
+            # print('block: {}'.format(block.name))
             if not block.squares:
                 blocks_to_remove.append(block)
-                print('   has no squares')
+                # print('   has no squares')
             else:
                 squares_to_remove = []
                 for square in block.squares:
                     if not square.sprite.parent:
-                        print("   to remove: {},{}".format(square.x, square.y))
+                        # print("   to remove: {},{}".format(square.x, square.y))
                         squares_to_remove.append(square)
                     else:
-                        print("   has parent: {},{}".format(square.x, square.y))
-        
+                        # print("   has parent: {},{}".format(square.x, square.y))
                 totalremoved += len(squares_to_remove)
                 for square in squares_to_remove:
                     block.squares.remove(square)
                 if not block.squares:
                     blocks_to_remove.append(block)
+        # assert that total removed is 10,20,30,40
         assert (totalremoved % self.width) == 0, '{} totalremove != {} width'.format(totalremoved, self.width)
+        assert totalremoved <= 40
         for block in blocks_to_remove:
             self.existing_blocks.remove(block)
 
