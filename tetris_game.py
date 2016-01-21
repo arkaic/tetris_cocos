@@ -513,7 +513,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     block.squares.remove(square)
                 if not block.squares:
                     blocks_to_remove.append(block)
-        assert totalremoved == len(self.squares_matrix), '{} totalremove != {} width'.format(len(squares_to_remove), len(self.width))
+        assert (totalremoved % self.width) == 0, '{} totalremove != {} width'.format(totalremoved, self.width)
         for block in blocks_to_remove:
             self.existing_blocks.remove(block)
 
