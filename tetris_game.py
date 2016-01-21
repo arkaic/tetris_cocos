@@ -1,4 +1,5 @@
 from random import randrange
+import sys
 
 import cocos
 from cocos import layer, scene
@@ -19,12 +20,18 @@ class Square:
     _sprite = None
     _x = None    # coordinates on the tetris grid
     _y = None
+    # debug purposes
+    x_history = None
+    y_history = None
 
     def __init__(self, image, block, loc):
         self._sprite = Sprite(image, position=(0, 0), rotation=0, scale=1, 
                               opacity=255, color=(255, 255, 255), anchor=None)
         self._block = block
-        self._x, self._y = loc
+        self.x_history = list()
+        self.y_history = list()
+        self.x = loc[0]
+        self.y = loc[1]
 
     @property
     def x(self):
@@ -32,6 +39,7 @@ class Square:
     @x.setter
     def x(self, value):
         self._x = value
+        # self.x_history.append(value)
 
     @property
     def y(self):
@@ -39,6 +47,9 @@ class Square:
     @y.setter
     def y(self, value):
         self._y = value
+        if value < 0: 
+            raise ShouldntHappenError("y assigned value < 0")
+            sys.exit()
 
     @property
     def sprite(self):
@@ -47,21 +58,13 @@ class Square:
     def sprite(self, value):
         self._sprite = value
 
+    @property
+    def block(self):
+        return self._block
+    
 
 class Block:
-    """ References all SquareSprites and their location on the model 2D array.
-    Sprites will exist inside an abstract bounding square that this class defines,
-    depending on the type of block.
-
-    Each block will have following attributes:
-     * Bounding square coordinates for each sprite, relative to origin point 0,0.
-     * Sprite grid coordinate that the origin point is mapped to.
-     * A single grid location coordinate that is used as the block's actual 
-       location in the grid. When the block moves, it's just this coordinate that 
-       moves. It is also defined as the origin point in the abstract bounding 
-       square and it is the sprites that are offsetted from this coordinate, 
-       giving the appearance of moving or rotating the block.
-
+    """ 
     The abstract bounding square is used to manipulate how a specific block 
     should rotate. Apparently, there ARE standards on how each rotates, which
     can be found in the tetris wikia. I'm using the most common one, which is
@@ -83,6 +86,10 @@ class Block:
         self.squares_matrix = tetrisboardlayer.squares_matrix
         self.squares = []
 
+    #---------------------------------------------------------------------------
+    #       Properties                             
+    #---------------------------------------------------------------------------
+
     @property
     def location(self):
         return self._location
@@ -97,28 +104,9 @@ class Block:
     def bounding_locations_map(self, value):
         self._bounding_locations_map = value
 
-    def move(self, direction):
-        if not self.can_move(direction):
-            return False
-
-        # Erase
-        for square in self.squares:
-            self.squares_matrix[square.x][square.y] = None
-
-        prev_loc_x, prev_loc_y = self.location
-        for square in self.squares:
-            if direction == 'LEFT':
-                self.location = (prev_loc_x - 1, prev_loc_y)
-            elif direction == 'RIGHT':
-                self.location = (prev_loc_x + 1, prev_loc_y)
-            elif direction == 'DOWN':
-                self.location = (prev_loc_x, prev_loc_y - 1)
-            square_bounding_x, square_bounding_y = self.bounding_locations_map[square]
-            square.x = self.location[0] + square_bounding_x
-            square.y = self.location[1] + square_bounding_y
-            self.squares_matrix[square.x][square.y] = square
-
-        return True
+    #---------------------------------------------------------------------------
+    #       Public                                    
+    #---------------------------------------------------------------------------
 
     def can_move(self, direction):
         # TODO refactor lines around for terseness
@@ -143,6 +131,33 @@ class Block:
                 if (not self._has_square_in_location((square.x, square.y - 1)) and
                         self.squares_matrix[square.x][square.y - 1] is not None):
                     return False
+        return True
+
+    def move(self, direction):
+        if not self.can_move(direction):
+            return False
+
+        # Erase from matrix first
+        for square in self.squares:
+            self.squares_matrix[square.x][square.y] = None
+
+        # Calculate new location for block
+        prev_x, prev_y = self.location
+        if direction == 'LEFT':
+            self.location = (prev_x - 1, prev_y)
+        elif direction == 'RIGHT':
+            self.location = (prev_x + 1, prev_y)
+        elif direction == 'DOWN':
+            self.location = (prev_x, prev_y - 1)
+
+        # For all of block's squares, update their mappings, fields, and put them
+        # back into the matrix in their new location
+        for square in self.squares:
+            square_bounding_x, square_bounding_y = self.bounding_locations_map[square]
+            square.x = square_bounding_x + self.location[0]
+            square.y = square_bounding_y + self.location[1]
+            self.squares_matrix[square.x][square.y] = square
+
         return True
 
     def rotate(self, direction):
@@ -301,19 +316,23 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
     width = 10
     height = 22
-    keydelay_interval = .25
     start_block_name = 'T'
+    # Event stuff
+    keydelay_interval = .25
     is_event_handler = True
     key_pressed = None
+    # Logic stuff
     squares_matrix = None     # MODEL
     current_block = None
-    tetris_maplayer = None
-    sandbox = None   # Palette for block creation
-    atoms = None  # Palette for graphically representing numeral score
-    score = None
     existing_blocks = []
+    # Rendering stuff
+    tetris_maplayer = None
+    sandbox = None   # Palette for block creation (rendering stuff)
+    # digit stuff
     digit_sprite_sets = []
     chosen_digits = []
+    atoms = None  # Palette for graphically representing numeral score
+    score = None
 
     def __init__(self, xmlpath):
         super(TetrisBoardLayer, self).__init__()
@@ -335,10 +354,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         # Add group of sprites based on current block
         self._new_block(self.start_block_name)
-
-        # DEBUG
-        # for square in self.current_block.squares:
-        #     print(square.x, square.y)
 
         # Set up scoreboard. Specifically, digit_sprite_sets shall hold 3 lists
         # of 10 DigitSquareGroup objects, one for each decimal symbol
@@ -368,10 +383,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self.unschedule(self._button_held)
 
     def _move_block(self, direction):
-        # # DEBUG
-        # for square in self.current_block.squares:
-        #     print(square.x, square.y)
-
         if direction == 'LEFT':
             # Does the movement in conditionals
             if self.current_block.move('LEFT'):
@@ -387,7 +398,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         elif direction == 'DOWN':
             if self.current_block.move('DOWN'):
                 for square in self.current_block.squares:
-                    # print(square.x, square.y)
                     texture_cell = self.tetris_maplayer.cells[square.x][square.y]
                     square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
         elif direction == 'UP':
@@ -423,7 +433,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         if self.current_block:
             raise ShouldntHappenError("Getting a new block without removing current")
-        self.current_block = tetrofactory.makeblock(self, name=blockname)
+        self.current_block = tetrofactory.make_tetris_block(self, name=blockname)
         self.existing_blocks.append(self.current_block)
 
         # Draw sprites on layer
@@ -448,35 +458,62 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         if not rows_to_clear:
             return 0
 
+        print('TO CLEAR\n', self._board_to_string())
+
         # Clear lines
         for y in rows_to_clear: 
             for x in range(len(self.squares_matrix)):
                 try:
-                    self.remove(self.squares_matrix[x][y])
-                except Exception:
-                    print('Sprite is not a child when clearing')
                     square = self.squares_matrix[x][y]
-                    print('coord:({},{})\n'.format(square.x, square.y))
-                    raise ShouldntHappenError("Shouldn't happen error, closing")
+                    self.remove(square.sprite)
+                except Exception:
+                    print('----------------------------------------------')
+                    print('Error trying to remove square.sprite from layer')
+                    print('Referenced sprite to be cleared: {}'.format(square.sprite))
+                    print("Sprite's block: %s" % square.block.name)
+                    square = self.squares_matrix[x][y]
+                    print("square.(x,y):({},{})".format(square.x, square.y))
+                    print("referenced (x,y):({},{})\n".format(x, y))
+                    print(self._board_to_string())
+                    if len(square.x_history) != len(square.y_history):
+                        print('square x and y histories do not match')
+                    else:
+                        print('history size =', len(square.x_history))
+                        print('x   y')
+                        for i in range(len(square.x_history)):
+                            print('{}   {}'.format(square.x_history[i], square.y_history[i]))
+                    print('----------------------------------------------')
+                    raise ShouldntHappenError("Either square is None or can't remove its sprite from layer")
                 # Library function remove() doesn't nullify parent
-                self.squares_matrix[x][y].parent = None
+                self.squares_matrix[x][y].sprite.parent = None
                 self.squares_matrix[x][y] = None
 
         # TODO comment out or delete once new collapse sticky comes in?
-        # Remove cleared sprites from their blocks
+        # Clear out "dead" squares that each existing block holds. If a block has
+        # no more squares left, remove that block from existing blocks
+        print('%d existing blocks' % len(self.existing_blocks))
         blocks_to_remove = []
+        totalremoved = 0
         for block in self.existing_blocks:
+            print('block: {}'.format(block.name))
             if not block.squares:
                 blocks_to_remove.append(block)
+                print('   has no squares')
             else:
                 squares_to_remove = []
                 for square in block.squares:
                     if not square.sprite.parent:
+                        print("   to remove: {},{}".format(square.x, square.y))
                         squares_to_remove.append(square)
+                    else:
+                        print("   has parent: {},{}".format(square.x, square.y))
+        
+                totalremoved += len(squares_to_remove)
                 for square in squares_to_remove:
                     block.squares.remove(square)
                 if not block.squares:
                     blocks_to_remove.append(block)
+        assert totalremoved == len(self.squares_matrix), '{} totalremove != {} width'.format(len(squares_to_remove), len(self.width))
         for block in blocks_to_remove:
             self.existing_blocks.remove(block)
 
@@ -494,9 +531,12 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
             for block in self.existing_blocks:
                 for square in block.squares:
-                    # Forget sprites lower than the clear line
+                    # Forget squares lower than the clear line
                     if square.y < base_y:
                         continue
+                    if square.y == base_y:
+                        raise ShouldntHappenError("Square should've been deleted from block.squares")
+                        sys.exit()
 
                     # Move square down on square grid by removing it and putting
                     # it in its new position.
@@ -506,11 +546,12 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                         # it could have been replaced by another square above it
                         # and within the same block, which is why the check.
                         self.squares_matrix[square.x][square.y] = None
-                    square.x, square.y = (new_x, new_y)
-                    self.squares_matrix[new_x][new_y] = square
+                    square.x = new_x
+                    square.y = new_y
+                    self.squares_matrix[square.x][square.y] = square
 
                     # Do the rendering
-                    texture_cell = self.tetris_maplayer.cells[new_x][new_y]
+                    texture_cell = self.tetris_maplayer.cells[square.x][square.y]
                     square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
             prev_y = y
 
