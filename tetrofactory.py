@@ -5,15 +5,14 @@ import tetris_game
 blockmap = ['L', 'J', 'I', 'O', 'S', 'Z', 'T']
 
 def make_tetris_block(board_layer, name=None):
+    if name is None:
+        name = blockmap[randrange(7)]
     block = tetris_game.Block(name, board_layer)
 
     # Handle all field settings for the block below
-    img = None
-    if name is None:
-        name = blockmap[randrange(7)]
-
     # Get block bounding locations for individual squares and the graphic image
     # for the block
+    img = None
     bounding_locations = None
     if name == 'I':
         img = board_layer.sandbox.cells[0][0].tile.image
