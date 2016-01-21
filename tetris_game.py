@@ -1,4 +1,3 @@
-from random import randrange
 import sys
 
 import cocos
@@ -569,19 +568,101 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         line, then above second line and so on.
         """
 
-        # todo identify clumps and add to clump list: start with a square and
+        def find_clumps(square):
+            """ Iterative flood search to identify clump from given square """
+            visited_squares = set()
+            clump = []
+            travel_stack = [square]
+            while travel_stack:
+                sq = travel_stack.pop()
+                if sq in visited_squares:
+                    continue
+
+                visited_squares.add(sq)
+                if self.squares_matrix[sq.x][sq.y - 1] is not None:
+                    travel_stack.append(self.squares_matrix[sq.x][sq.y - 1])
+                if self.squares_matrix[sq.x][sq.y + 1] is not None:
+                    travel_stack.append(self.squares_matrix[sq.x][sq.y + 1])
+                if self.squares_matrix[sq.x - 1][sq.y] is not None:
+                    travel_stack.append(self.squares_matrix[sq.x - 1][sq.y])
+                if self.squares_matrix[sq.x + 1][sq.y] is not None:
+                    travel_stack.append(self.squares_matrix[sq.x + 1][sq.y])
+            return clump
+
+        def is_moveable(clump):
+            for square in clump:
+                # Not moveable if square is at bottom of grid or the square below
+                # it is not part of clump
+                if square.y - 1 < 0:
+                    return False
+                the_square_below = self.squares_matrix[square.x][square.y - 1]
+                if the_square_below is not None and the_square_below not in clump:
+                    return False
+            return True
+
+        def move(clump):
+            # Erase
+            for square in clump:
+                self.squares_matrix[square.x][square.y] = None
+
+            # Update square.y's
+            # TODO refactor if I want to try to cascade method as well from this
+            # code. I will need to update existing block locations.
+            for square in clump:
+                square.y += 1
+
+            # add back to matrix in new locations
+            for square in clump:
+                self.squares_matrix[square.x][square.y] = square
+
+        # identify clumps and add to clump list: start with a square and
         # recursively find non-diagonally adjacent neighbor squares: recursive
         # implementation can do a flood scan until no more unvisited cells left
         # to go to. 
-        # (?also keep track of squares that have empty space below them?) 
+        clumps = []  # list of lists of squares
         for y in rows_to_clear:
-            pass
+            for x in range(self.width):
+                # start square for recursive clump indentification procedure
+                if y + 1 > self.height:
+                    continue
+                square = self.squares_matrix[x][y + 1]
+                if square is None:
+                    continue
+                for clump in clumps:
+                    if square in clump:
+                        continue
 
-        # todo round robin: while loop and use modulus. Keep a counter of 
+                new_clump = find_clumps(square)
+                clumps.append(new_clump)
+
+        # Assertion that clumps must be disjoin
+        unionset = set()
+        for clump in clumps:
+            for sq in clump:
+                assert sq not in unionset, "clumps are not disjoint"
+                unionset.add(sq)
+
+        # Keep a counter of 
         # consecutive moveable clumps visited. Once counter == total number of 
         # clumps, end. Moveable is defined as ALL "bottom squares" of a clump having
         # currently empty space below them. 
-        # if clump is moveable
+        # if clump is moveable, increment counter
+        consecutive_counter = 0
+        i = 0   # for modulus round robin indexing
+        while consecutive_counter < len(clumps):
+            clump = clumps[i % len(clumps)]
+            if is_moveable(clump):
+                move(clump)
+                consecutive_counter = 0
+            else:
+                consecutive_counter += 1
+            i += 1
+
+        # render
+        for clump in clumps:
+            for square in clump:
+                texture_cell = self.tetris_maplayer.cells[square.x][square.y]
+                square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
 
     def _display_score(self):
         """ Erase previous three digits and display new ones """
