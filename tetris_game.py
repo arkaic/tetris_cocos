@@ -595,21 +595,29 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         clumps = []  # list of lists of squares
         for y in rows_to_clear:
             for x in range(self.width):
+                # print('({},{})'.format(x,y))
                 # start square for recursive clump indentification procedure
                 if y + 1 > self.height:
-                    continue
+                    break
                 square = self.squares_matrix[x][y + 1]
                 if square is None:
                     continue
+
+                exists_in_clump = False
                 for clump in clumps:
                     if square in clump:
-                        continue
+                        exists_in_clump = True
+                        break
+                if exists_in_clump:
+                    continue
 
                 new_clump = find_clumps(square)
+                # print('  clumpsize:', len(new_clump))
                 clumps.append(new_clump)
 
-        # Assertion that clumps must be disjoin
-        print(self._board_to_string)
+        # Assertion that clumps must be disjoint
+        # print(self._board_to_string())
+        # print("num clumps:", len(clumps))
         unionset = set()
         for clump in clumps:
             for sq in clump:
