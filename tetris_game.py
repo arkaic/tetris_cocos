@@ -514,43 +514,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         for block in blocks_to_remove:
             self.existing_blocks.remove(block)
 
-        #-----------------------------------------------------------------------
-        #                              Collapsing
-        # Shifts down every block above the row lines (line_ys). Keeps track 
-        # of a base row that determines which squares to shift down
-        # rows_to_clear, 
-        #-----------------------------------------------------------------------
-        prev_y = None
-        base_y = rows_to_clear[0] 
-        for y in rows_to_clear: 
-            if prev_y is not None:
-                base_y += (y - prev_y - 1)
-
-            for block in self.existing_blocks:
-                for square in block.squares:
-                    # Forget squares lower than the clear line
-                    if square.y < base_y:
-                        continue
-                    if square.y == base_y:
-                        raise ShouldntHappenError("Square should've been deleted from block.squares")
-                        sys.exit()
-
-                    # Move square down on square grid by removing it and putting
-                    # it in its new position.
-                    new_x, new_y = (square.x, square.y - 1)
-                    if self.squares_matrix[square.x][square.y] is square:
-                        # The square may not be in its original location because
-                        # it could have been replaced by another square above it
-                        # and within the same block, which is why the check.
-                        self.squares_matrix[square.x][square.y] = None
-                    square.x = new_x
-                    square.y = new_y
-                    self.squares_matrix[square.x][square.y] = square
-
-                    # Do the rendering
-                    texture_cell = self.tetris_maplayer.cells[square.x][square.y]
-                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
-            prev_y = y
+        self._collapse(rows_to_clear)
 
         # Assert no rows 
         # try:
@@ -571,7 +535,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         def find_clumps(square):
             """ Iterative flood search to identify clump from given square """
             visited_squares = set()
-            clump = []
             travel_stack = [square]
             while travel_stack:
                 sq = travel_stack.pop()
@@ -579,21 +542,22 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     continue
 
                 visited_squares.add(sq)
-                if self.squares_matrix[sq.x][sq.y - 1] is not None:
+                if sq.y - 1 >= 0 and self.squares_matrix[sq.x][sq.y - 1] is not None:
                     travel_stack.append(self.squares_matrix[sq.x][sq.y - 1])
-                if self.squares_matrix[sq.x][sq.y + 1] is not None:
+                if sq.y + 1 < self.height and self.squares_matrix[sq.x][sq.y + 1] is not None:
                     travel_stack.append(self.squares_matrix[sq.x][sq.y + 1])
-                if self.squares_matrix[sq.x - 1][sq.y] is not None:
+                if sq.x - 1 >= 0 and self.squares_matrix[sq.x - 1][sq.y] is not None:
                     travel_stack.append(self.squares_matrix[sq.x - 1][sq.y])
-                if self.squares_matrix[sq.x + 1][sq.y] is not None:
+                if sq.x + 1 < self.width and self.squares_matrix[sq.x + 1][sq.y] is not None:
                     travel_stack.append(self.squares_matrix[sq.x + 1][sq.y])
-            return clump
+                print("keep going")
+            return list(visited_squares)
 
         def is_moveable(clump):
             for square in clump:
                 # Not moveable if square is at bottom of grid or the square below
                 # it is not part of clump
-                if square.y - 1 < 0:
+                if square.y == 0:
                     return False
                 the_square_below = self.squares_matrix[square.x][square.y - 1]
                 if the_square_below is not None and the_square_below not in clump:
@@ -609,12 +573,17 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             # TODO refactor if I want to try to cascade method as well from this
             # code. I will need to update existing block locations.
             for square in clump:
-                square.y += 1
+                square.y = square.y + 1
+                print('y=', square.y)
 
             # add back to matrix in new locations
             for square in clump:
                 self.squares_matrix[square.x][square.y] = square
+            print(self._board_to_string())
 
+        #-----------------------------------------------------------------------
+        #                         Method begin
+        #-----------------------------------------------------------------------
         # identify clumps and add to clump list: start with a square and
         # recursively find non-diagonally adjacent neighbor squares: recursive
         # implementation can do a flood scan until no more unvisited cells left
@@ -657,6 +626,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             else:
                 consecutive_counter += 1
             i += 1
+            print('consecutive_counter=%r' % consecutive_counter)
 
         # render
         for clump in clumps:
