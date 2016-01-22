@@ -315,6 +315,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
     width = 10
     height = 22
     start_block_name = 'T'
+    other_start_names = ['I', 'S', 'Z']
     # Event stuff
     keydelay_interval = .25
     is_event_handler = True
@@ -418,7 +419,11 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self._display_score()
 
             self.current_block = None
-            self._new_block()
+            # debug
+            if self.other_start_names:
+                self._new_block(self.other_start_names.pop())
+            else:
+                self._new_block()
 
     def _new_block(self, blockname=None):
         """ Note: This should be called when self.current_block == None
@@ -427,6 +432,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
           name=None, no current => get random
           name=<name>, current exists => nothing happens
           name=<name>, no current => use supplied
+          tisz
         """
 
         if self.current_block:
@@ -550,7 +556,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     travel_stack.append(self.squares_matrix[sq.x - 1][sq.y])
                 if sq.x + 1 < self.width and self.squares_matrix[sq.x + 1][sq.y] is not None:
                     travel_stack.append(self.squares_matrix[sq.x + 1][sq.y])
-                print("keep going")
             return list(visited_squares)
 
         def is_moveable(clump):
@@ -573,8 +578,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             # TODO refactor if I want to try to cascade method as well from this
             # code. I will need to update existing block locations.
             for square in clump:
-                square.y = square.y + 1
-                print('y=', square.y)
+                square.y = square.y - 1
 
             # add back to matrix in new locations
             for square in clump:
@@ -605,11 +609,15 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 clumps.append(new_clump)
 
         # Assertion that clumps must be disjoin
+        print(self._board_to_string)
         unionset = set()
         for clump in clumps:
             for sq in clump:
-                assert sq not in unionset, "clumps are not disjoint"
-                unionset.add(sq)
+                if sq in unionset:
+                    print("size of unionset={}".format(len(unionset)))
+                    raise ShouldntHappenError('clumps share squares')
+                else:
+                    unionset.add(sq)
 
         # Keep a counter of 
         # consecutive moveable clumps visited. Once counter == total number of 
