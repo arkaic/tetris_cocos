@@ -1,26 +1,17 @@
-**Currently in progress**
+## Currently
 
-**TODOS**
+All core mechanics working as expected. Collapsing after clearing lines is implemented using the sticky method as outlined in the link: http://gamedevelopment.tutsplus.com/tutorials/implementing-tetris-clearing-lines--gamedev-1197
+
+There is no menu screen and no lose condition yet.
+
+## TODOS
 * lose condition
-* UI
-  * Next block
-  * Menu
+* UI - Title Menu
 * Difficulty speed ups
+* UI - Next block
 * Not rendering the top two rows
 
-**What works?**
-* Moving blocks and dropping. 
-* Blocks moving down by timer.
-* Rotation
-* Line clearing and collapsing afterwards
-* Timed drop sets blocks in place and makes new blocks
-* Scoring
-
-
-**How to run**
-
-- Install python3
-
+## How to run
 - Install cocos2d for python from http://python.cocos2d.org/download.html
 
 - "python3 tetris_game.py"
