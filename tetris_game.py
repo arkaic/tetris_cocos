@@ -443,7 +443,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         # Draw sprites on layer
         for square in self.current_block.squares:
             texture_cell = self.tetris_maplayer.cells[square.x][square.y]
-            square.position = (texture_cell.x + 9, texture_cell.y + 9)
+            square.sprite.position = (texture_cell.x + 9, texture_cell.y + 9)
             self.add(square.sprite, z=1)
 
         print(self._board_to_string('New block: %s' % self.current_block.name))
