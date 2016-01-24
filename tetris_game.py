@@ -446,6 +446,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             square.position = (texture_cell.x + 9, texture_cell.y + 9)
             self.add(square.sprite, z=1)
 
+        print(self._board_to_string('New block: %s' % self.current_block.name))
+
     def _clear_lines(self):
         """ Clear any complete lines and collapse the squares as a result """
 
@@ -461,9 +463,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         if not rows_to_clear:
             return 0
-
-        # DEBUG
-        # print('TO CLEAR\n', self._board_to_string())
 
         # Clear lines
         for y in rows_to_clear: 
@@ -493,6 +492,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.squares_matrix[x][y].sprite.parent = None
                 self.squares_matrix[x][y] = None
 
+        print(self._board_to_string('clear lines'))
+
         # TODO comment out or delete once new collapse sticky comes in?
         # Clear out "dead" squares that each existing block holds. If a block has
         # no more squares left, remove that block from existing blocks
@@ -521,6 +522,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             self.existing_blocks.remove(block)
 
         self._collapse(rows_to_clear)
+
+        print(self._board_to_string('After collapse'))
 
         # Assert no rows 
         # try:
@@ -583,10 +586,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             # add back to matrix in new locations
             for square in clump:
                 self.squares_matrix[square.x][square.y] = square
-            print(self._board_to_string())
 
         #-----------------------------------------------------------------------
-        #                         Method begin
+        #                         Method: find_clumps() begin
         #-----------------------------------------------------------------------
         # identify clumps and add to clump list: start with a square and
         # recursively find non-diagonally adjacent neighbor squares: recursive
@@ -612,12 +614,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     continue
 
                 new_clump = find_clumps(square)
-                # print('  clumpsize:', len(new_clump))
                 clumps.append(new_clump)
 
         # Assertion that clumps must be disjoint
-        # print(self._board_to_string())
-        # print("num clumps:", len(clumps))
         unionset = set()
         for clump in clumps:
             for sq in clump:
@@ -642,7 +641,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             else:
                 consecutive_counter += 1
             i += 1
-            print('consecutive_counter=%r' % consecutive_counter)
 
         # render
         for clump in clumps:
@@ -692,7 +690,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             else:
                 self._move_block(self.key_pressed)
 
-    def _board_to_string(self):
+    def _board_to_string(self, label=None):
         s = ""
         for y in range(len(self.squares_matrix[0])):
             row = '|'
@@ -702,6 +700,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 else:
                     row += '*|'
             s = row + '\n' + s
+        if label is not None:
+            s = label + '\n' + s
         return s
 
 
