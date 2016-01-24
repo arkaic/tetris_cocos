@@ -437,7 +437,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
 
         if self.current_block:
             raise ShouldntHappenError("Getting a new block without removing current")
-        self.current_block = tetrofactory.make_tetris_block(self, name=blockname)
+        self.current_block, gameover = tetrofactory.make_tetris_block(self, name=blockname)
         self.existing_blocks.append(self.current_block)
 
         # Draw sprites on layer
@@ -445,6 +445,11 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             texture_cell = self.tetris_maplayer.cells[square.x][square.y]
             square.sprite.position = (texture_cell.x + 9, texture_cell.y + 9)
             self.add(square.sprite, z=1)
+
+        if gameover:
+            # todo, exit game or go to menu
+            print('GAMEOVER')
+            exit()
 
         print(self._board_to_string('New block: %s' % self.current_block.name))
 
