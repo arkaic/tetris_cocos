@@ -544,9 +544,11 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         them independently. More specifically, round robin drop them one square
         at a time. The round robin order starts with clumps above first complete
         line, then above second line and so on.
+
+        Define three nested functions
         """
 
-        def find_clumps(square):
+        def find_clump(square):
             """ Iterative flood search to identify clump from given square """
             visited_squares = set()
             travel_stack = [square]
@@ -593,7 +595,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.squares_matrix[square.x][square.y] = square
 
         #-----------------------------------------------------------------------
-        #                         Method: find_clumps() begin
+        #                         Method: find_clump() begin
         #-----------------------------------------------------------------------
         # identify clumps and add to clump list: start with a square and
         # recursively find non-diagonally adjacent neighbor squares: recursive
@@ -618,7 +620,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 if exists_in_clump:
                     continue
 
-                new_clump = find_clumps(square)
+                new_clump = find_clump(square)
                 clumps.append(new_clump)
 
         # Assertion that clumps must be disjoint
