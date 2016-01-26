@@ -2,9 +2,9 @@ import sys
 
 import cocos
 from cocos import layer, scene
-from cocos.sprite import Sprite
-from cocos.director import director
 from cocos.actions import Place
+from cocos.director import director
+from cocos.sprite import Sprite
 from pyglet import window
 
 import tetrofactory
