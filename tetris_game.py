@@ -4,6 +4,7 @@ import cocos
 from cocos import layer, scene
 from cocos.actions import Place
 from cocos.director import director
+from cocos.scene import Scene
 from cocos.sprite import Sprite
 from pyglet import window
 
@@ -388,23 +389,23 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 # Now do the rendering for each square
                 for square in self.current_block.squares:
                     texture_cell = self.tetris_maplayer.cells[square.x][square.y]
-                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+                    self._render_move(square.sprite, texture_cell.x, texture_cell.y)
         elif direction == 'RIGHT':
             if self.current_block.move('RIGHT'):
                 for square in self.current_block.squares:
                     texture_cell = self.tetris_maplayer.cells[square.x][square.y]
-                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+                    self._render_move(square.sprite, texture_cell.x, texture_cell.y)
         elif direction == 'DOWN':
             if self.current_block.move('DOWN'):
                 for square in self.current_block.squares:
                     texture_cell = self.tetris_maplayer.cells[square.x][square.y]
-                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+                    self._render_move(square.sprite, texture_cell.x, texture_cell.y)
         elif direction == 'UP':
             # rotate clockwise only
             if self.current_block.rotate('CLOCKWISE'):
                 for square in self.current_block.squares:
                     texture_cell = self.tetris_maplayer.cells[square.x][square.y]
-                    square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+                    self._render_move(square.sprite, texture_cell.x, texture_cell.y)
         elif direction == 'DROP':
             while self.current_block.can_move('DOWN'):
                 self._move_block('DOWN')
@@ -424,6 +425,11 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self._new_block(self.other_start_names.pop())
             else:
                 self._new_block()
+
+    def _render_move(self, sprite, x, y):
+        action = Place((x + 9, y + 9))
+        sprite.do(action)
+        
 
     def _new_block(self, blockname=None):
         """ Note: This should be called when self.current_block == None
@@ -653,7 +659,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         for clump in clumps:
             for square in clump:
                 texture_cell = self.tetris_maplayer.cells[square.x][square.y]
-                square.sprite.do(Place((texture_cell.x + 9, texture_cell.y + 9)))
+                self._render_move(square.sprite, texture_cell.x, texture_cell.y)
 
     def _display_score(self):
         """ Erase previous three digits and display new ones """
@@ -722,12 +728,13 @@ class ShouldntHappenError(UserWarning):
 
 if __name__ == '__main__':
     director.init(resizable=True)
-    tetris_board = TetrisBoardLayer('tetris.xml')
+
     scroller = layer.ScrollingManager()
     scroller.set_focus(100, 200)
+    tetris_board = TetrisBoardLayer('tetris.xml')
     scroller.add(tetris_board)
+    scroller.add(layer.ScrollableLayer())
 
-    s = layer.ScrollableLayer()
-    scroller.add(s)
-
-    director.run(scene.Scene(scroller))
+    # menu_scene = Scene()
+    game_scene = Scene(scroller)
+    director.run(game_scene)
