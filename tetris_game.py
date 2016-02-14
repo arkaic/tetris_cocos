@@ -427,7 +427,8 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self._new_block()
 
     def _render_move(self, sprite, x, y):
-        action = Place((x + 9, y + 9))
+        # action = Place((x + 9, y + 9))
+        action = MoveBy((x + 9, y + 9), 1)
         sprite.do(action)
         
 
