@@ -2,7 +2,7 @@ import sys
 
 import cocos
 from cocos import layer, scene
-from cocos.actions import Place
+from cocos.actions import Place, MoveBy
 from cocos.director import director
 from cocos.scene import Scene
 from cocos.sprite import Sprite
@@ -366,7 +366,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         self._display_score()
 
         # Schedule timed drop of block
-        self.schedule_interval(self._timed_drop, .4)
+        # self.schedule_interval(self._timed_drop, .4)
 
     def on_key_press(self, key, modifiers):
         # Note: finishes execution when key pressed and only once, even if held
@@ -396,6 +396,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     texture_cell = self.tetris_maplayer.cells[square.x][square.y]
                     self._render_move(square.sprite, texture_cell.x, texture_cell.y)
         elif direction == 'DOWN':
+            # moving down one square
             if self.current_block.move('DOWN'):
                 for square in self.current_block.squares:
                     texture_cell = self.tetris_maplayer.cells[square.x][square.y]
@@ -407,6 +408,15 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     texture_cell = self.tetris_maplayer.cells[square.x][square.y]
                     self._render_move(square.sprite, texture_cell.x, texture_cell.y)
         elif direction == 'DROP':
+            # to quickly immediately move the block down as far as it can get
+
+            
+            for sq in self.current_block.squares:
+                print('moving a square down by 10 seconds')
+                texture_cell = self.tetris_maplayer.cells[sq.x][sq.y]
+                self._render_move(sq.sprite, texture_cell.x, texture_cell.y, 10)
+                print('done moving it')
+            
             while self.current_block.can_move('DOWN'):
                 self._move_block('DOWN')
 
@@ -426,9 +436,11 @@ class TetrisBoardLayer(layer.ScrollableLayer):
             else:
                 self._new_block()
 
-    def _render_move(self, sprite, x, y):
+    def _render_move(self, sprite, x, y, dt=None):
+        if dt is None:
+            dt = 0.4
         # action = Place((x + 9, y + 9))
-        action = MoveBy((x + 9, y + 9), 1)
+        action = MoveBy((0, -9), dt)
         sprite.do(action)
         
 
@@ -602,7 +614,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.squares_matrix[square.x][square.y] = square
 
         #-----------------------------------------------------------------------
-        #                         Method: find_clump() begin
+        #                         Method: _collapse() begin
         #-----------------------------------------------------------------------
         # identify clumps and add to clump list: start with a square and
         # recursively find non-diagonally adjacent neighbor squares: recursive
