@@ -1,3 +1,7 @@
+## How to run
+- pip3 install cocos2d
+- "python3 tetris_game.py"
+
 # Tetris
 An implementation of Tetris using Python's Cocos2D framework.
 
@@ -7,14 +11,6 @@ All core mechanics working as expected. Collapsing after clearing lines is imple
 
 There is no menu screen and no lose condition yet.
 
-## TODOS
-* lose condition
-* UI - Title Menu
-* Difficulty speed ups
-* UI - Next block
-* Not rendering the top two rows
-
-## How to run
-- Install cocos2d for python from http://python.cocos2d.org/download.html
-
-- "python3 tetris_game.py"
+## Dependencies
+- Python3
+- cocos2d from http://python.cocos2d.org/download.html

@@ -1,3 +1,10 @@
+#  TODOS
+# * lose condition
+# * UI - Title Menu
+# * Difficulty speed ups
+# * UI - Next block
+# * Not rendering the top two rows
+
 import sys
 
 import cocos
