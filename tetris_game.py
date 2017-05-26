@@ -595,7 +595,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.squares_matrix[square.x][square.y] = square
 
         #-----------------------------------------------------------------------
-        #                         Method: find_clumps() begin
+        #                          _collapse() method begin
         #-----------------------------------------------------------------------
         # identify clumps and add to clump list: start with a square and
         # recursively find non-diagonally adjacent neighbor squares: recursive
@@ -623,7 +623,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 new_clump = find_clumps(square)
                 clumps.append(new_clump)
 
-        # Assertion that clumps must be disjoint
+        # Assertion that clumps must be disjoint ie not intersect
         unionset = set()
         for clump in clumps:
             for sq in clump:
@@ -632,21 +632,21 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     raise ShouldntHappenError('clumps share squares')
                 else:
                     unionset.add(sq)
-
-        # Keep a counter of 
-        # consecutive moveable clumps visited. Once counter == total number of 
-        # clumps, end. Moveable is defined as ALL "bottom squares" of a clump having
-        # currently empty space below them. 
-        # if clump is moveable, increment counter
-        consecutive_counter = 0
+        
+        #
+        # Keep a counter of consecutive unmoveable clumps visited. Once counter == total
+        # number of clumps, end. Moveable is defined as ALL "bottom squares" of 
+        # a clump having currently empty space below them. if clump is moveable, increment counter
+        #
+        consecutive_unmoveable_clumps = 0
         i = 0   # for modulus round robin indexing
-        while consecutive_counter < len(clumps):
+        while consecutive_unmoveable_clumps < len(clumps):
             clump = clumps[i % len(clumps)]
             if is_moveable(clump):
                 move(clump)
-                consecutive_counter = 0
+                consecutive_unmoveable_clumps = 0
             else:
-                consecutive_counter += 1
+                consecutive_unmoveable_clumps += 1
             i += 1
 
         # render
