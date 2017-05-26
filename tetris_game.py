@@ -548,6 +548,9 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         line, then above second line and so on.
         """
 
+        #-----------------------------------------------------------------------
+        #                          NESTED FUNCTIONS
+        #-----------------------------------------------------------------------
         def find_clumps(square):
             """ Iterative flood search to identify clump from given square """
             visited_squares = set()
@@ -604,7 +607,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         clumps = []  # list of lists of squares
         for y in rows_to_clear:
             for x in range(self.width):
-                # print('({},{})'.format(x,y))
                 # start square for recursive clump indentification procedure
                 if y + 1 > self.height:
                     break
