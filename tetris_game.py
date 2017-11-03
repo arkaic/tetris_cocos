@@ -1,3 +1,10 @@
+#  TODOS
+# * lose condition
+# * UI - Title Menu
+# * Difficulty speed ups
+# * UI - Next block
+# * Not rendering the top two rows
+
 import sys
 
 import cocos
@@ -567,7 +574,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         Define three nested functions
         """
 
-        def find_clump(square):
+        #-----------------------------------------------------------------------
+        #                          NESTED FUNCTIONS
+        #-----------------------------------------------------------------------
+        def find_clumps(square):
             """ Iterative flood search to identify clump from given square """
             visited_squares = set()
             travel_stack = [square]
@@ -614,7 +624,7 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 self.squares_matrix[square.x][square.y] = square
 
         #-----------------------------------------------------------------------
-        #                         Method: _collapse() begin
+        #                          _collapse() method begin
         #-----------------------------------------------------------------------
         # identify clumps and add to clump list: start with a square and
         # recursively find non-diagonally adjacent neighbor squares: recursive
@@ -623,7 +633,6 @@ class TetrisBoardLayer(layer.ScrollableLayer):
         clumps = []  # list of lists of squares
         for y in rows_to_clear:
             for x in range(self.width):
-                # print('({},{})'.format(x,y))
                 # start square for recursive clump indentification procedure
                 if y + 1 > self.height:
                     break
@@ -639,10 +648,10 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                 if exists_in_clump:
                     continue
 
-                new_clump = find_clump(square)
+                new_clump = find_clumps(square)
                 clumps.append(new_clump)
 
-        # Assertion that clumps must be disjoint
+        # Assertion that clumps must be disjoint ie not intersect
         unionset = set()
         for clump in clumps:
             for sq in clump:
@@ -651,21 +660,21 @@ class TetrisBoardLayer(layer.ScrollableLayer):
                     raise ShouldntHappenError('clumps share squares')
                 else:
                     unionset.add(sq)
-
-        # Keep a counter of 
-        # consecutive moveable clumps visited. Once counter == total number of 
-        # clumps, end. Moveable is defined as ALL "bottom squares" of a clump having
-        # currently empty space below them. 
-        # if clump is moveable, increment counter
-        consecutive_counter = 0
+        
+        #
+        # Keep a counter of consecutive unmoveable clumps visited. Once counter == total
+        # number of clumps, end. Moveable is defined as ALL "bottom squares" of 
+        # a clump having currently empty space below them. if clump is moveable, increment counter
+        #
+        consecutive_unmoveable_clumps = 0
         i = 0   # for modulus round robin indexing
-        while consecutive_counter < len(clumps):
+        while consecutive_unmoveable_clumps < len(clumps):
             clump = clumps[i % len(clumps)]
             if is_moveable(clump):
                 move(clump)
-                consecutive_counter = 0
+                consecutive_unmoveable_clumps = 0
             else:
-                consecutive_counter += 1
+                consecutive_unmoveable_clumps += 1
             i += 1
 
         # render

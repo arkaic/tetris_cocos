@@ -1,3 +1,7 @@
+## How to run
+- pip3 install cocos2d
+- "python3 tetris_game.py"
+
 # Tetris
 An implementation of Tetris using Python's Cocos2D framework.
 
